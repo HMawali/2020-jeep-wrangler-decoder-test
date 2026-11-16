@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "can-dashboard",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-I", "-u", "can_dashboard/server.py", "--port", "COM3", "--http", "8765"],
+      "port": 8765
+    }
+  ]
+}
