@@ -6,6 +6,21 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-I", "-u", "can_dashboard/server.py", "--port", "COM3", "--http", "8765"],
       "port": 8765
+    },
+    {
+      "name": "tazer-gui",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-I", "-u", "tazer_config/tazer_gui.py"]
+    },
+    {
+      "name": "tazer-read (COM3, IHS)",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-I", "-u", "tazer_config/tazerctl.py", "read", "--port", "COM3", "--bus", "s4", "--tx", "0x620"]
+    },
+    {
+      "name": "tazer-discover (COM3, IHS)",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-I", "-u", "tazer_config/tazerctl.py", "discover", "--port", "COM3", "--bus", "s4"]
     }
   ]
 }
