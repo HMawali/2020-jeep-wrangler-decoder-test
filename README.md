@@ -14,6 +14,7 @@ using a WeAct Studio USB2CANFD adapter through the OBD-II port (with an SGW star
 | Path | Contents |
 |---|---|
 | [`WRANGLER_CAN_REFERENCE.md`](WRANGLER_CAN_REFERENCE.md) | The main reference: bus pinout, decoded CAN IDs (both buses), UDS findings, injection notes, and the gateway/security boundary |
+| [`CAN_CONTROL_FINDINGS.md`](CAN_CONTROL_FINDINGS.md) | Companion session notes: exact slcan commands and bit maps, climate-panel decode (`0x30E`), the ESS toggle frame, the turn-signal "not injectable" proof, and the OBD-II/UDS DTC read + enhanced-clear procedure |
 | `tools/` | Reusable PowerShell + Python scripts (capture, UDS/ISO-TP client, bit/signal analysis, frame injection) |
 | `can_dashboard/` | Live web dashboard (`server.py` + `dashboard.html`) showing RPM / speed / gear / pedal / wheels |
 | `logs/` | Raw capture CSVs (`time_s,type,id,dlc,data`), one file per experiment |
