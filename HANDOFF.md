@@ -60,6 +60,22 @@ not wired at the time — but the BCM is reachable on **s6** regardless, so use 
 **Remaining BCM-config work is now the label-discovery loop** (read → change one setting →
 read → `diff`) to confirm each bit before any write. Writes stay LOCKED per below.
 
+### Label-discovery attempts so far (2026-11-21) — method works, but 0x620 DIDs didn't move
+- **Read reliability:** single `read` drops DIDs on the busy 500k bus (gets 7–13/18). Fix =
+  **merge several reads** until 18/18 (scratchpad `fullread.py`; fold into the tool). With
+  merged snapshots the read is **stable** — two independent full reads are byte-identical.
+- **Negative results (no change in ANY of the 18 DIDs on 0x620):**
+  - Rotary **headlight switch** AUTO↔on — expected (that's a live switch state / broadcast, not
+    stored config), so not a valid config test.
+  - Uconnect **"Flash Lights with Lock" ON→OFF** — a real stored setting, yet **no DID changed**.
+- **So the customer settings are not appearing in 0x620's 0x0122–0x0149 on a live re-read.**
+  Two hypotheses to resolve next:
+  1. **Commit-on-sleep** — module writes NVM only on power-down. Test: change one setting, do a
+     full **ignition/sleep cycle** (key off, door open, ~2 min), then read+diff.
+  2. **Wrong module** — setting lives in the radio/HMI or another responder (0x740/0x742/0x744/
+     0x74A/0x74B/0x751/0x75A/0x75E). Test: capture those modules' DIDs before/after a toggle.
+- Snapshots saved (scratchpad, not committed): `snap_on.json` (baseline), `snap_flashoff.json`.
+
 ### (historical) The question this resolved
 Does **BCM 0x620 answer UDS** at the OBD port with the SGW bypass in, and on **which bus**?
 Static RE can't answer this — only the truck can. Run, in order:

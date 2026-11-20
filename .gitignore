@@ -7,3 +7,5 @@ Thumbs.db
 .DS_Store
 *.swp
 before.json
+snap_*.json
+after*.json
