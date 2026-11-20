@@ -38,6 +38,20 @@ python -I tazer_config\tazerctl.py watch --port COM3 --bus s6 --ids 3B3,3B4,3C2
 ```
 `watch` is listen-only (M1) — it cannot ACK or transmit, so it can't disturb the bus.
 
+## Writing a setting (DANGEROUS — gated)
+`write` does a read-modify-write (UDS `2E`). It is **dry-run by default** (prints the exact frame
+and stops); only `--yes` transmits. It always reads the block first and saves a revert file.
+```bat
+:: SAFE first test — write the block back UNCHANGED to prove the write path works, change nothing:
+python -I tazer_config\tazerctl.py write --port COM3 --bus s6 --tx 0x620 --rx 0x504 --did 0x0146 --verify --yes
+
+:: flip one bit (dry-run first, then --yes), 0146/0147 = Customer Settings Menu = menu-reversible:
+python -I tazer_config\tazerctl.py write --port COM3 --bus s6 --tx 0x620 --rx 0x504 --did 0x0146 --byte 7 --mask 0x80 --value 0x80
+python -I tazer_config\tazerctl.py write ...same... --yes
+python -I tazer_config\tazerctl.py write --revert revert_0146.json --yes   :: undo
+```
+A wrong `2E` can brick a body module. Keep the read-first / dry-run / revert discipline.
+
 `--bus s4` = 125k CAN-IHS (body, pins 3/11, default). `--bus s6` = 500k CAN-C (pins 6/14).
 
 ## Labelling a setting (how writes get unlocked safely)
@@ -56,5 +70,5 @@ in `did_map.json` (`label`, `confirmed: true`). Only then is a write for it safe
 | `canlink.py` | serial (Windows ctypes + POSIX) + slcan link |
 | `uds.py` | ISO-TP (single+multi-frame+flow control) + UDS client (read-only helpers) |
 | `did_catalog.py` + `did_map.json` | the 18 config DIDs and their bit-fields (from firmware) |
-| `tazerctl.py` | CLI: `ports` / `sniff` / `discover` / `read` / `watch` / `diff` |
+| `tazerctl.py` | CLI: `ports` / `sniff` / `discover` / `read` / `watch` / `write` / `diff` |
 | `tazer_gui.py` | Tkinter GUI (read + save) |

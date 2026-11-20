@@ -110,3 +110,8 @@ class UdsClient:
         except Exception: pass
     def read_did(self, did, tx_id, rx_id=None, ignore=frozenset()):
         return self.request([0x22, (did >> 8) & 0xFF, did & 0xFF], tx_id, rx_id, ignore)
+    def write_did(self, did, data, tx_id, rx_id=None, ignore=frozenset()):
+        """0x2E WriteDataByIdentifier. data = the FULL block bytes to store.
+        Positive response is 0x6E <didhi> <didlo>. DANGEROUS — caller must gate this."""
+        payload = bytes([0x2E, (did >> 8) & 0xFF, did & 0xFF]) + bytes(data)
+        return self.request(payload, tx_id, rx_id, ignore)

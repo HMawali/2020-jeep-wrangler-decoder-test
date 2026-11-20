@@ -16,11 +16,11 @@ work and tells you exactly where the last session stopped and what to do next.
 - The tool is in **`tazer_config/`** (pure Python, zero-dep). It is **READ-ONLY**.
 
 ## Hard rules
-- **Do not implement writes (`0x2E`), SecurityAccess (`0x27`), or DTC clears (`0x14`)** until
-  a setting is confirmed by the read→change→re-read **diff** workflow in HANDOFF.md. A wrong
-  write can brick a body module.
-- **Never fabricate** a CAN frame, a DID↔setting-name mapping, or a seed/key. If a value is
-  not verified, say it's unverified.
+- `write` (UDS `0x2E`) now exists but is **hard-gated** (dry-run default, reads first, saves a
+  revert file, only `--yes` transmits). Keep that discipline; do **not** loosen it, and do **not**
+  add `0x27` SecurityAccess or `0x14` DTC-clear. A wrong write can brick a body module.
+- **Never fabricate** a CAN frame, a DID↔setting-name mapping, a write value, or a seed/key. If a
+  value is not verified, say it's unverified. Writes must be read-modify-write from a live read.
 - Vehicle PARKED, key RUN. Prefer silent/listen-only for exploration. Don't fuzz the 500k
   powertrain bus.
 

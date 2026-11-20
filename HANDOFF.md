@@ -145,14 +145,51 @@ python -I tazer_config\tazerctl.py read --port COM3 --bus s4 --tx 0x620 --save b
 ```
 (or `tazer_config\tazer_gui.py` for the GUI). This dumps all 18 blocks. Save the JSON.
 
-## Why writes are LOCKED (do not remove this guard without the owner's OK)
-We have the bit-field **map** but **not** verified setting **names** or safe **values** —
-the firmware reaches each setting through menu dispatch tables that defeat static name
-correlation (only one field, "HoodAlarm", auto-matched). **A wrong `2E` write can brick a
-body module.** So:
-- The tool implements **no** `0x2E`, **no** `0x27`, **no** `0x14` clear. Keep it that way
-  until a field is proven.
-- **Never fabricate** a write frame, a DID↔name mapping, or a seed/key. If unknown, say so.
+### Label-discovery — session 2026-11-21 (Mac): firmware extraction (the "emulation" ask)
+Full-system simavr emulation wasn't the pragmatic win (simavr needs an untrusted tap + its
+AT90CAN support is uncertain, and the handlers are async/menu-driven). Instead I did a targeted
+dataflow extraction of the firmware's own argument setup at all **85 call sites** of the config
+wrapper (byte 0x8c00 / word 0x4600), which takes `R25:R24=DID, R22=byte, R20=mask, R18=value,
+R16=op`. Results:
+- The extracted **(DID, byte, mask)** at each site **matches `did_map.json` exactly** — the
+  config map is now confirmed by two independent methods (Ghidra script + this extractor).
+- Same **18** `0x01xx` DIDs; plus two extra DID families `0xF010/0xF011` the Tazer also touches
+  (left out of our body-config map for now).
+- **KEY:** the write **value** (`R18`) and **op** (`R16`) are usually `mov`'d from the handler's
+  *inputs* — i.e. the value is the **user's menu selection at runtime, not a static constant**.
+  So there is no fixed "magic value" to replay. The correct, safe way to write a setting is a
+  **read-modify-write from the live block** (read DID, flip the (byte,mask) bits, write back).
+  That is exactly what the new `write` command does.
+- The builder at word 0x4063 is the **read** sender (hardcodes `03 22 <DID>`); the write/2E goes
+  through the async RX handler doing RMW with the stashed (byte,mask,value). We don't replay the
+  firmware's internal 2E routine — we build a standard UDS `2E 01 XX <block>` ourselves from the
+  live read, which is simpler and safer.
+
+## Writes: now IMPLEMENTED but HARD-GATED (owner-directed)
+The tool has a `write` command (UDS `2E`, read-modify-write). It is **not** a free write:
+- **Dry-run by default** — it prints the exact `2E` frame it *would* send and stops. It only
+  transmits with `--yes`.
+- It **always READs the block first** (aborts if the read fails) and **saves the original** to a
+  revert file (`write --revert file.json --yes` restores it).
+- `--verify` writes the block back **unchanged** — proves the write path end-to-end while changing
+  nothing. **This is the recommended FIRST test on the truck.**
+Still **no** `0x27` SecurityAccess and **no** `0x14` clear. **A wrong `2E` can brick a body
+module** — keep the dry-run/read-first/revert discipline, and **never fabricate** a DID↔name
+mapping, a value, or a seed/key.
+
+### >>> RECOMMENDED FIRST TRUCK TEST (safe, proves we can write) <<<
+```
+:: 1) prove the write PATH works without changing anything (identical readback-write):
+python -I tazer_config\tazerctl.py write --port COMx --bus s6 --tx 0x620 --rx 0x504 --did 0x0146 --verify --yes
+::    expect: session OK, a POSITIVE 6E 01 46 response, readback == new. That confirms
+::    SGW-bypass + extended session is enough to WRITE (no seed-key), end to end.
+:: 2) ONLY after that: flip ONE Customer-Settings-Menu bit (0146/0147 are menu-reversible,
+::    the safest block), observe the car, then revert:
+python -I tazer_config\tazerctl.py write ... --did 0x0146 --byte 7 --mask 0x80 --value 0x80   (dry-run: shows frame)
+python -I tazer_config\tazerctl.py write ... --did 0x0146 --byte 7 --mask 0x80 --value 0x80 --yes
+python -I tazer_config\tazerctl.py write --revert revert_0146.json --yes                      (undo)
+```
+Pair this with `watch` (listen-only) in another window to see the matching broadcast bitmap move.
 
 ## How a setting gets labelled (the safe unlock path)
 1. `read … --save before.json`

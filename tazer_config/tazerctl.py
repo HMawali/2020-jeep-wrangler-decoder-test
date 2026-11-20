@@ -17,6 +17,14 @@ USAGE
   watch = LISTEN-ONLY live view of the config / Customer-Settings broadcast bitmaps
           (0x3B3/0x3B4/0x3C2 + 0x3E8-0x3EB...). Toggle a menu setting and see the bit move.
 
+  python -I tazerctl.py write --port COM3 --bus s6 --tx 0x620 --rx 0x504 --did 0x0146 --verify
+  python -I tazerctl.py write ... --did 0x0146 --byte 7 --mask 0x80 --value 0x80 [--yes]
+  python -I tazerctl.py write ... --revert revert_0146.json --yes
+
+  write = DANGEROUS read-modify-write of a config block. Dry-run (prints the exact 2E frame
+          and stops) UNLESS you pass --yes. Always reads first and saves a revert file.
+          --verify writes the block back UNCHANGED (proves the write path, changes nothing).
+
 BUS: s4 = 125k CAN-IHS (pins 3/11, body) [default]   s6 = 500k CAN-C (pins 6/14)
 Vehicle PARKED, key in RUN, SGW bypass installed.
 """
@@ -181,6 +189,84 @@ def cmd_watch(a):
                   open(a.save, 'w'), indent=2)
         print(f'# saved last values -> {a.save}')
 
+def cmd_write(a):
+    """DANGEROUS: write one config block (UDS 2E) via read-modify-write.
+    Dry-run by default — prints exactly what it WOULD send and stops. Only --yes transmits.
+    Always: enters extended session, READs the block first, shows before/after, and saves the
+    original to a revert file. A wrong write can brick a body module — read HANDOFF.md."""
+    port = pick_port(a.port); bus = bus_of(a.bus)
+    cat = did_catalog.load()
+    tx = (int(a.tx, 16) if isinstance(a.tx, str) else a.tx) or cat.bcm_request_id
+    rx = (int(a.rx, 16) if isinstance(a.rx, str) else a.rx) if a.rx is not None else None
+    link = SlcanLink(port); link.open(bus, listen_only=False)
+    uds = UdsClient(link)
+    ignore = {f.id for f in link.collect(2.0)}; link.drain()
+    try:
+        s = uds.diagnostic_session(0x03, tx, rx)
+        print('# session 0x10 03 -> ' + (('DENIED %s' % nrc_name(s.nrc)) if (s and s.is_negative)
+              else (('OK ' + s.hex) if s else 'no response')))
+    except Exception as e:
+        print('# session error:', e)
+    uds.tester_present(tx)
+
+    # --- revert mode: restore a previously saved original block verbatim ---
+    if a.revert:
+        saved = json.load(open(a.revert))
+        did = int(saved['did'], 16); new = bytes.fromhex(saved['original'])
+        print('# REVERT DID 0x%04X <- %s' % (did, new.hex(' ').upper()))
+        if not a.yes:
+            print('# dry-run. add --yes to actually write the revert.'); link.close(); return
+        w = uds.write_did(did, new, tx, rx, ignore=ignore)
+        print('# write resp: ' + (('NRC 0x%02X %s' % (w.nrc, nrc_name(w.nrc))) if (w and w.is_negative)
+              else (w.hex if w else 'no response')))
+        link.close(); return
+
+    did = int(a.did, 16)
+    # read current block
+    r = uds.read_did(did, tx, rx, ignore=ignore)
+    if r is None or r.is_negative or not (len(r.data) >= 3 and r.data[0] == 0x62):
+        print('# ABORT: could not read DID 0x%04X first (%s). Not writing.' %
+              (did, (('NRC %s' % nrc_name(r.nrc)) if (r and r.is_negative) else 'no/bad response')))
+        link.close(); return
+    old = bytes(r.data[3:])
+
+    if a.verify:
+        new = old  # identical write: proves the write path end-to-end, changes nothing
+        change = '(identical readback — no change)'
+    else:
+        if a.byte is None or a.mask is None or a.value is None:
+            print('# need --byte N --mask 0xNN --value 0xNN  (or --verify). Aborting.'); link.close(); return
+        b = int(a.byte); mask = int(a.mask, 16); val = int(a.value, 16)
+        if b >= len(old):
+            print('# ABORT: byte %d beyond block length %d' % (b, len(old))); link.close(); return
+        nb = bytearray(old); nb[b] = ((old[b] & (~mask & 0xFF)) | (val & mask)) & 0xFF
+        new = bytes(nb); change = 'byte %d: %02X -> %02X (mask 0x%02X)' % (b, old[b], new[b], mask)
+
+    lbl = cat.block_label(did)
+    print('\n# DID 0x%04X %s' % (did, ('[%s]' % lbl) if lbl else ''))
+    print('#   current : ' + old.hex(' ').upper())
+    print('#   new     : ' + new.hex(' ').upper() + '   ' + change)
+    print('#   frame   : 2E %02X %02X %s' % ((did >> 8) & 0xFF, did & 0xFF, new.hex(' ').upper()))
+
+    revfile = a.save or ('revert_%04X.json' % did)
+    json.dump({'did': '0x%04X' % did, 'original': old.hex().upper(),
+               'module': '0x%03X' % tx, 'bus': bus, 'time': time.strftime('%Y-%m-%d %H:%M:%S')},
+              open(revfile, 'w'), indent=2)
+    print('#   saved original -> %s  (undo with:  write --revert %s --yes)' % (revfile, revfile))
+
+    if not a.yes:
+        print('\n# DRY-RUN. Nothing was sent. Re-run with --yes to actually write.')
+        link.close(); return
+
+    w = uds.write_did(did, new, tx, rx, ignore=ignore)
+    print('# write resp: ' + (('NRC 0x%02X (%s)' % (w.nrc, nrc_name(w.nrc))) if (w and w.is_negative)
+          else (('POSITIVE ' + w.hex) if w else 'no response')))
+    rb = uds.read_did(did, tx, rx, ignore=ignore)
+    if rb and not rb.is_negative and len(rb.data) >= 3:
+        back = bytes(rb.data[3:])
+        print('# readback : ' + back.hex(' ').upper() + ('   == new (confirmed)' if back == new else '   != new (!)'))
+    link.close()
+
 def cmd_diff(a):
     """Compare two saved snapshots (read DIDs or watch frames); print which bytes/bits
     changed. This is how a setting gets labelled: snapshot, change ONE setting, snapshot, diff."""
@@ -212,6 +298,16 @@ def main():
     p.add_argument('--seconds', type=float, default=0, help='0 = until Ctrl-C')
     p.add_argument('--ids', default=None, help='comma hex list; default = CSM + config bitmaps')
     p.add_argument('--save', default=None); p.set_defaults(fn=cmd_watch)
+    p = sub.add_parser('write', help='DANGEROUS read-modify-write of a config block (dry-run unless --yes)')
+    common(p)
+    p.add_argument('--tx', default=None); p.add_argument('--rx', default=None)
+    p.add_argument('--did', help='e.g. 0x0146'); p.add_argument('--byte', type=int)
+    p.add_argument('--mask', default=None, help='e.g. 0x80'); p.add_argument('--value', default=None, help='e.g. 0x80')
+    p.add_argument('--verify', action='store_true', help='write the block back UNCHANGED (proves write path, changes nothing)')
+    p.add_argument('--save', default=None, help='revert file to save the original block to')
+    p.add_argument('--revert', default=None, help='restore a saved original block file')
+    p.add_argument('--yes', action='store_true', help='actually transmit (without this it is a dry-run)')
+    p.set_defaults(fn=cmd_write)
     p = sub.add_parser('diff'); p.add_argument('before'); p.add_argument('after'); p.set_defaults(fn=cmd_diff)
     a = ap.parse_args()
     a.fn(a)
