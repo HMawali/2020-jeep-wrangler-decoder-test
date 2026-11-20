@@ -46,7 +46,21 @@ defeat").
 6. **The app is built** — `tazer_config/` (pure Python, zero-dep, runs on this laptop).
    See `tazer_config/README.md`. It is **read-only**.
 
-## The ONE open empirical question (this is your first job)
+## ✅ RESOLVED (2026-11-21, Windows laptop, adapter on COM8)
+**The open question below is ANSWERED: BCM 0x620 answers UDS on the 500 kbit/s CAN-C bus
+(pins 6/14).** Response ID is **0x504** (not the guessed 0x628). Discover (`discover --bus s6`)
+found body responders at request IDs **0x620→0x504, 0x740→0x4C0, 0x742, 0x744, 0x74A, 0x74B,
+0x751, 0x75A, 0x75E** (all positive `02 7E 00` TesterPresent). The IHS bus (s4, pins 3/11) was
+not wired at the time — but the BCM is reachable on **s6** regardless, so use s6.
+
+**Config read WORKS:** `read --bus s6 --tx 0x620 --rx 0x504` → extended session `50 03…` OK,
+**13/18 DIDs read** (saved to `before.json`). No-response DIDs on this BCM variant: 0x0126,
+0x0130, 0x0134, 0x0144, 0x0145. Baseline values are in `before.json`.
+
+**Remaining BCM-config work is now the label-discovery loop** (read → change one setting →
+read → `diff`) to confirm each bit before any write. Writes stay LOCKED per below.
+
+### (historical) The question this resolved
 Does **BCM 0x620 answer UDS** at the OBD port with the SGW bypass in, and on **which bus**?
 Static RE can't answer this — only the truck can. Run, in order:
 ```bat
