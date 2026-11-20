@@ -88,22 +88,24 @@ def cmd_read(a):
     uds.tester_present(tx)
     results = {}; ok = 0
     for did in cat.all_dids:
+        lbl = cat.block_label(did)
+        tag = '0x%04X %s' % (did, ('[%s]' % lbl) if lbl else '')
         try:
             r = uds.read_did(did, tx, rx, ignore=ignore)
         except Exception:
             r = None
         if r is None:
-            print('  DID 0x%04X: — no response' % did); results['0x%04X' % did] = None; continue
+            print('  DID %s: — no response' % tag); results['0x%04X' % did] = None; continue
         if r.is_negative:
-            print('  DID 0x%04X: — NRC 0x%02X (%s)' % (did, r.nrc, nrc_name(r.nrc)))
+            print('  DID %s: — NRC 0x%02X (%s)' % (tag, r.nrc, nrc_name(r.nrc)))
             results['0x%04X' % did] = {'nrc': r.nrc}; continue
         if len(r.data) >= 3 and r.data[0] == 0x62:
             payload = r.data[3:]
             ok += 1
-            print('  DID 0x%04X: %s' % (did, payload.hex(' ').upper() or '(empty)'))
+            print('  DID %s: %s' % (tag, payload.hex(' ').upper() or '(empty)'))
             results['0x%04X' % did] = payload.hex().upper()
         else:
-            print('  DID 0x%04X: ? %s' % (did, r.hex)); results['0x%04X' % did] = {'raw': r.hex}
+            print('  DID %s: ? %s' % (tag, r.hex)); results['0x%04X' % did] = {'raw': r.hex}
     link.close()
     print(f'# {ok}/{len(cat.all_dids)} DIDs read.')
     if not ok:

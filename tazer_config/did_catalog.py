@@ -18,19 +18,34 @@ class Field:
         m = ('mask 0x%02X' % self.mask) if self.mask else 'mask ?'
         return f'{b} · {m} · {self.origin}'
 
+class Block:
+    def __init__(self, label, source, confirmed, fields):
+        self.label = label; self.source = source
+        self.confirmed = confirmed; self.fields = fields
+
 class Catalog:
     def __init__(self, path=_PATH):
         self.path = path
         raw = json.load(open(path))
         self.bcm_request_id = int(raw.get('bcm_request_id', '0x620'), 16)
-        self.dids = {}
-        for k, flds in raw['dids'].items():
-            self.dids[int(k, 16)] = [Field(f) for f in flds]
+        self.blocks = {}
+        for k, v in raw['dids'].items():
+            did = int(k, 16)
+            if isinstance(v, list):                      # legacy format: bare field list
+                self.blocks[did] = Block(None, None, False, [Field(f) for f in v])
+            else:                                        # {block_label, fields:[...]}
+                self.blocks[did] = Block(v.get('block_label'), v.get('block_source'),
+                                         bool(v.get('block_confirmed')),
+                                         [Field(f) for f in v.get('fields', [])])
     @property
     def all_dids(self):
-        return sorted(self.dids.keys())
+        return sorted(self.blocks.keys())
     def fields(self, did):
-        return self.dids.get(did, [])
+        b = self.blocks.get(did)
+        return b.fields if b else []
+    def block_label(self, did):
+        b = self.blocks.get(did)
+        return b.label if b else None
 
 def load(path=_PATH):
     return Catalog(path)

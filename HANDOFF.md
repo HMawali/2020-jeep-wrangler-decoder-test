@@ -76,21 +76,50 @@ read → `diff`) to confirm each bit before any write. Writes stay LOCKED per be
   "proxi" configuration** (what the Tazer changes) — **not** the customer Uconnect-menu settings.
   So those bits **cannot be labelled by toggling the factory menu**; the menu doesn't change them.
 
-### >>> NEXT SESSION (Mac): how to label the hidden BCM bits <<<
-Pick one (the diff tooling is ready — `tools/fullread.py` + `tazerctl.py diff`):
-1. **Cross-reference known FCA proxi config (no truck needed, do this first).** Public
-   **AlfaOBD** / FCA "VPC/proxi" documentation lists JL BCM body-config settings by **byte/bit**.
-   Map those onto `tazer_config/did_map.json` by (DID, byte, mask). Mark each `"source":"alfaobd",
-   "confirmed":false` until bench-diff-verified. This is the highest-leverage path and plays to
-   research, not truck time. **Do NOT fabricate** a mapping — only record ones you can cite.
-2. **Diff with a known-good writer.** If the owner has **AlfaOBD / wiTECH / the Tazer**, change ONE
-   hidden setting with it, then `fullread` before/after + `diff` → that bit is confirmed. This is
-   the gold-standard label.
-3. **Scan the other responders.** Read config DIDs from `0x740/0x742/0x744/0x74A/0x74B/0x751/
-   0x75A/0x75E` (and the radio/HMI) and diff across a customer-menu toggle, to locate where the
-   customer settings actually live.
-- Raw snapshots stayed on the Windows laptop (owner chose not to commit vehicle config). Re-capture
-  on the Mac with `fullread.py` when needed.
+### Label-discovery — session 2026-11-21 (Mac): Option 1 DONE — community cross-reference
+Found the community resource and cross-referenced it. **Our work is independently
+quadruple-confirmed**: the community lists BCM as **req 0x620 / resp 0x504 on CAN-C**, exactly
+what the Windows session measured.
+- **Sources (cite these; forum/community = untrusted, so labels are unconfirmed):**
+  - GitHub `rstellhorn/jeep-jl-powernet-scripts` (scripts; BCM 620/504; actuations via 0x2F).
+  - Community Google Sheet "CAN IDs … 2018+ JL" tab **UDS Modules**:
+    `docs.google.com/spreadsheets/d/16ypMADKinBBnH1pOY4-gMmVRjeR85fYplpV12aCHJC4`
+  - Forum thread 82139 (jlwranglerforums, 403s to automated fetch; open in a browser).
+- **Block-level names added to `tazer_config/did_map.json`** (new `block_label` per DID,
+  `block_confirmed:false`). 14/18 of our DIDs are named by the sheet:
+  `0122-0126`=Vehicle Configuration 1-5, `0130`=ECU Config: Harness Pins, `0131/0132`=ECU Config,
+  `0134`=ECU Config: **Wireless**, `0141`=Mixed Functions, `0144`=**Suspension**, `0145`=ECU Config 7,
+  **`0146`/`0147`=Vehicle Customer Settings Menu 1/2 (CSM1/CSM2)**. Not in sheet: `013B 013C 013E 0149`.
+  These are BLOCK labels only — per-bit field labels in did_map.json are still `null`/unconfirmed.
+- **KEY REFRAME of the "customer settings" puzzle:** the sheet shows the config is also mirrored
+  as **free-running broadcast frames** — `0x3E8-0x3EB`=Vehicle Config Bitmap 1-4 ("content appears
+  identical" to the DID reads), and **`0x3B3 / 0x3B4 / 0x3C2`=Customer Settings Menu Bitmap 1-3**
+  (same ID on CAN-C and CAN-IHS). That's why the Windows toggle-sniff saw "no UDS frames" — customer
+  settings broadcast as these bitmaps, not as UDS. They can be read **passively in listen-only mode**
+  (zero brick risk, no diagnostic session).
+- **Module map (for the other responders):** cluster/IPC `742/4C2`, RF-hub-suspected `740/4C0`,
+  airbag `744/4C4`, radio `7BF/53F` (CAN-IHS), HVAC `783/503` (CAN-IHS).
+
+### >>> NEXT SESSION: how to get per-BIT labels (block names are done) <<<
+Two independent tracks; the diff tooling is ready (`tools/fullread.py` + `tazerctl.py diff`):
+
+**A. Truck, SAFE (listen-only) — find customer-setting bits via broadcast bitmaps.**
+   1. `python -I tazer_config\tazerctl.py sniff --port COMx --bus s6 --seconds 8` and note the
+      bytes of `0x3B3/0x3B4/0x3C2` (CSM) and `0x3E8-0x3EB` (vehicle config).  [add a targeted
+      capture of just those IDs if helpful]
+   2. Change ONE customer setting in the Uconnect menu, capture again, diff the bytes → the bit that
+      moved is that setting. Because the broadcast "appears identical" to the DID, that same bit maps
+      back to the `0146/0147` (CSM) or `0122-0126` DID. This needs NO write and NO UDS session.
+
+**B. Per-bit labels for the hidden proxi config (dealer settings).** Still needs one of:
+   - A **known-good writer** (AlfaOBD/wiTECH/Tazer): change one dealer setting, `fullread`
+     before/after + `diff` → confirmed bit. Gold standard.
+   - **Correlate** the broadcast config bitmaps (`0x3E8…`, identical to the DID bytes) against named
+     AlfaOBD settings, once we have an AlfaOBD byte/bit list. **Do NOT fabricate** a per-bit mapping;
+     only record ones backed by a diff or a citable source.
+
+- Raw vehicle snapshots stayed on the Windows laptop (owner chose not to commit vehicle config).
+  Re-capture with `fullread.py` when needed.
 
 ### (historical) The question this resolved
 Does **BCM 0x620 answer UDS** at the OBD port with the SGW bypass in, and on **which bus**?

@@ -54,7 +54,7 @@ class App:
         left = ttk.Frame(mid); mid.add(left, weight=3)
         self.tree = ttk.Treeview(left, columns=('data',), show='tree headings', height=18)
         self.tree.heading('#0', text='DID'); self.tree.heading('data', text='data / field')
-        self.tree.column('#0', width=120); self.tree.column('data', width=420)
+        self.tree.column('#0', width=300); self.tree.column('data', width=320)
         self.tree.pack(fill='both', expand=True, side='left')
         sb = ttk.Scrollbar(left, command=self.tree.yview); sb.pack(side='right', fill='y')
         self.tree.config(yscrollcommand=sb.set)
@@ -143,7 +143,9 @@ class App:
                 elif kind == 'status': self.status.config(text=payload)
                 elif kind == 'row':
                     did, data, ok = payload
-                    node = self.tree.insert('', 'end', text='0x%04X' % did, values=(data,),
+                    lbl = self.cat.block_label(did)
+                    label = '0x%04X  %s' % (did, lbl) if lbl else '0x%04X' % did
+                    node = self.tree.insert('', 'end', text=label, values=(data,),
                                             tags=('ok' if ok else 'bad',))
                     for f in self.cat.fields(did):
                         name = f.label or 'unlabelled'
