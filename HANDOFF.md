@@ -60,21 +60,37 @@ not wired at the time — but the BCM is reachable on **s6** regardless, so use 
 **Remaining BCM-config work is now the label-discovery loop** (read → change one setting →
 read → `diff`) to confirm each bit before any write. Writes stay LOCKED per below.
 
-### Label-discovery attempts so far (2026-11-21) — method works, but 0x620 DIDs didn't move
-- **Read reliability:** single `read` drops DIDs on the busy 500k bus (gets 7–13/18). Fix =
-  **merge several reads** until 18/18 (scratchpad `fullread.py`; fold into the tool). With
-  merged snapshots the read is **stable** — two independent full reads are byte-identical.
-- **Negative results (no change in ANY of the 18 DIDs on 0x620):**
-  - Rotary **headlight switch** AUTO↔on — expected (that's a live switch state / broadcast, not
-    stored config), so not a valid config test.
-  - Uconnect **"Flash Lights with Lock" ON→OFF** — a real stored setting, yet **no DID changed**.
-- **So the customer settings are not appearing in 0x620's 0x0122–0x0149 on a live re-read.**
-  Two hypotheses to resolve next:
-  1. **Commit-on-sleep** — module writes NVM only on power-down. Test: change one setting, do a
-     full **ignition/sleep cycle** (key off, door open, ~2 min), then read+diff.
-  2. **Wrong module** — setting lives in the radio/HMI or another responder (0x740/0x742/0x744/
-     0x74A/0x74B/0x751/0x75A/0x75E). Test: capture those modules' DIDs before/after a toggle.
-- Snapshots saved (scratchpad, not committed): `snap_on.json` (baseline), `snap_flashoff.json`.
+### Label-discovery — session 2026-11-21 (Windows laptop, COM8). Method works; 0x620 DIDs are DEALER proxi, not customer menu
+- **Read reliability:** a single `read` drops DIDs on the busy 500k bus (7–13/18). **Fix merged
+  into the repo: `tools/fullread.py`** — runs the read repeatedly and merges non-null DIDs until
+  18/18. Use it for every before/after snapshot:
+  `python -I tools/fullread.py --port COM8 --bus s6 --tx 0x620 --rx 0x504 --save snap.json`
+  With merged snapshots the read is **stable** — independent full reads are byte-identical.
+- **Negative results — NO change in any of the 18 DIDs on 0x620, across these tests:**
+  - Rotary **headlight switch** AUTO↔on — a live switch state/broadcast, not stored config (not a valid config test).
+  - Uconnect **"Flash Lights with Lock" ON→OFF** — a real customer setting; **no DID moved**.
+  - Same setting **re-checked after a full ignition/sleep cycle** — still **no change** → **commit-on-sleep RULED OUT**.
+  - A 20 s listen-only sniff during a toggle saw **no UDS/diagnostic frames** on 500k (toggle not
+    independently confirmed, so treat as tentative) → customer settings look **radio/HMI-local**, not UDS.
+- **CONCLUSION:** the firmware-derived DIDs `0x0122–0x0149` on 0x620 hold the **hidden/dealer
+  "proxi" configuration** (what the Tazer changes) — **not** the customer Uconnect-menu settings.
+  So those bits **cannot be labelled by toggling the factory menu**; the menu doesn't change them.
+
+### >>> NEXT SESSION (Mac): how to label the hidden BCM bits <<<
+Pick one (the diff tooling is ready — `tools/fullread.py` + `tazerctl.py diff`):
+1. **Cross-reference known FCA proxi config (no truck needed, do this first).** Public
+   **AlfaOBD** / FCA "VPC/proxi" documentation lists JL BCM body-config settings by **byte/bit**.
+   Map those onto `tazer_config/did_map.json` by (DID, byte, mask). Mark each `"source":"alfaobd",
+   "confirmed":false` until bench-diff-verified. This is the highest-leverage path and plays to
+   research, not truck time. **Do NOT fabricate** a mapping — only record ones you can cite.
+2. **Diff with a known-good writer.** If the owner has **AlfaOBD / wiTECH / the Tazer**, change ONE
+   hidden setting with it, then `fullread` before/after + `diff` → that bit is confirmed. This is
+   the gold-standard label.
+3. **Scan the other responders.** Read config DIDs from `0x740/0x742/0x744/0x74A/0x74B/0x751/
+   0x75A/0x75E` (and the radio/HMI) and diff across a customer-menu toggle, to locate where the
+   customer settings actually live.
+- Raw snapshots stayed on the Windows laptop (owner chose not to commit vehicle config). Re-capture
+  on the Mac with `fullread.py` when needed.
 
 ### (historical) The question this resolved
 Does **BCM 0x620 answer UDS** at the OBD port with the SGW bypass in, and on **which bus**?
