@@ -26,6 +26,18 @@ python -I tazer_config\tazerctl.py read --port COM3 --bus s4 --tx 0x620 --save b
 python -I tazer_config\tazer_gui.py
 ```
 
+## Find a customer-setting's bit the SAFE way (listen-only, no write)
+The config is also broadcast as free-running frames (community sheet): `0x3B3/0x3B4/0x3C2` =
+Customer Settings Menu bitmap, `0x3E8-0x3EB` = Vehicle Config bitmap. `watch` captures them in
+silent mode and prints byte/bit changes live — toggle one menu setting and watch the bit move:
+```bat
+python -I tazer_config\tazerctl.py watch --port COM3 --bus s6
+:: (then change ONE setting in the Uconnect menu; the moved bit is that setting)
+:: narrow to just the Customer Settings Menu bitmaps:
+python -I tazer_config\tazerctl.py watch --port COM3 --bus s6 --ids 3B3,3B4,3C2
+```
+`watch` is listen-only (M1) — it cannot ACK or transmit, so it can't disturb the bus.
+
 `--bus s4` = 125k CAN-IHS (body, pins 3/11, default). `--bus s6` = 500k CAN-C (pins 6/14).
 
 ## Labelling a setting (how writes get unlocked safely)
@@ -44,5 +56,5 @@ in `did_map.json` (`label`, `confirmed: true`). Only then is a write for it safe
 | `canlink.py` | serial (Windows ctypes + POSIX) + slcan link |
 | `uds.py` | ISO-TP (single+multi-frame+flow control) + UDS client (read-only helpers) |
 | `did_catalog.py` + `did_map.json` | the 18 config DIDs and their bit-fields (from firmware) |
-| `tazerctl.py` | CLI: `ports` / `sniff` / `discover` / `read` / `diff` |
+| `tazerctl.py` | CLI: `ports` / `sniff` / `discover` / `read` / `watch` / `diff` |
 | `tazer_gui.py` | Tkinter GUI (read + save) |

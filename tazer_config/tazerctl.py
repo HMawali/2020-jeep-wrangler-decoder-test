@@ -11,7 +11,11 @@ USAGE
   python -I tazerctl.py sniff    --port COM3 [--bus s4|s6] [--seconds 5]
   python -I tazerctl.py discover --port COM3 [--bus s4|s6] [--start 0x600] [--end 0x7FF]
   python -I tazerctl.py read     --port COM3 [--bus s4|s6] [--tx 0x620] [--rx 0xNNN] [--save out.json]
+  python -I tazerctl.py watch    --port COM3 [--bus s4|s6] [--ids 3B3,3B4,3C2] [--seconds N] [--save out.json]
   python -I tazerctl.py diff     before.json after.json        # label-discovery helper
+
+  watch = LISTEN-ONLY live view of the config / Customer-Settings broadcast bitmaps
+          (0x3B3/0x3B4/0x3C2 + 0x3E8-0x3EB...). Toggle a menu setting and see the bit move.
 
 BUS: s4 = 125k CAN-IHS (pins 3/11, body) [default]   s6 = 500k CAN-C (pins 6/14)
 Vehicle PARKED, key in RUN, SGW bypass installed.
@@ -115,27 +119,84 @@ def cmd_read(a):
                    'dids': results}, open(a.save, 'w'), indent=2)
         print(f'# saved -> {a.save}')
 
+# Config/Customer-Settings broadcast bitmap IDs (free-running on the bus; same ID on
+# CAN-C and CAN-IHS). Source: community jeep-jl-powernet "CAN IDs" sheet.
+#   0x3B3/0x3B4/0x3C2 = Customer Settings Menu bitmap 1-3
+#   0x3E8-0x3EB,0x44A,0x44C,0x381,0x38A = Vehicle Config bitmap ; 0x3F0,0x3F2 = ECU Config bitmap
+WATCH_CSM = [0x3B3, 0x3B4, 0x3C2]
+WATCH_VEHCFG = [0x3E8, 0x3E9, 0x3EA, 0x3EB, 0x44A, 0x44C, 0x381, 0x38A]
+WATCH_ECUCFG = [0x3F0, 0x3F2]
+DEFAULT_WATCH_IDS = WATCH_CSM + WATCH_VEHCFG + WATCH_ECUCFG
+
+def _byte_bit_diff(xhex, yhex):
+    """List of 'byte i: AA->BB (bits 0xNN)' for each differing byte."""
+    xb = bytes.fromhex(xhex); yb = bytes.fromhex(yhex); out = []
+    for i in range(max(len(xb), len(yb))):
+        ox = xb[i] if i < len(xb) else 0
+        oy = yb[i] if i < len(yb) else 0
+        if ox != oy:
+            out.append('byte %d: %02X -> %02X   (bits changed: 0x%02X)' % (i, ox, oy, ox ^ oy))
+    return out
+
+def _parse_ids(s):
+    return sorted({int(x.strip().replace('0x', ''), 16) for x in s.split(',') if x.strip()})
+
+def cmd_watch(a):
+    """LISTEN-ONLY (safe) capture of the config / Customer-Settings broadcast bitmaps.
+    Shows byte/bit changes live: start it, then toggle one setting in the truck and watch
+    which bit moves. That bit maps back to the matching 0146/0147 (CSM) or 0122-0126 DID.
+    No diagnostic session, no write — cannot disturb the bus."""
+    port = pick_port(a.port); bus = bus_of(a.bus)
+    ids = set(_parse_ids(a.ids)) if a.ids else set(DEFAULT_WATCH_IDS)
+    link = SlcanLink(port); link.open(bus, listen_only=True)   # M1 silent
+    print(f'# WATCH (listen-only, safe) on {BUS_LABEL[bus]}')
+    print('# IDs: ' + ' '.join('0x%03X' % i for i in sorted(ids)))
+    print('# Toggle ONE setting now — byte/bit changes print live. Ctrl-C to stop.')
+    print('# (An ID that never prints a baseline may only broadcast at key-on; cycle the key.)')
+    last = {}; changes = 0
+    deadline = (time.time() + a.seconds) if a.seconds and a.seconds > 0 else None
+    try:
+        while deadline is None or time.time() < deadline:
+            for f in link.collect(0.2):
+                if f.id not in ids:
+                    continue
+                h = f.hex; prev = last.get(f.id)
+                if prev is None:
+                    last[f.id] = h
+                    print('  baseline 0x%03X = %s' % (f.id, f.data.hex(' ').upper()))
+                elif h != prev:
+                    changes += 1
+                    print('  CHANGE   0x%03X : %s -> %s' %
+                          (f.id, bytes.fromhex(prev).hex(' ').upper(), f.data.hex(' ').upper()))
+                    for d in _byte_bit_diff(prev, h):
+                        print('           ' + d)
+                    last[f.id] = h
+    except KeyboardInterrupt:
+        print('\n# stopped by user')
+    link.close()
+    print(f'# {len(last)} watched IDs seen, {changes} change event(s).')
+    if a.save:
+        json.dump({'bus': bus, 'time': time.strftime('%Y-%m-%d %H:%M:%S'),
+                   'frames': {'0x%03X' % k: v for k, v in last.items()}},
+                  open(a.save, 'w'), indent=2)
+        print(f'# saved last values -> {a.save}')
+
 def cmd_diff(a):
-    """Compare two saved reads; print which DID bytes/bits changed. This is how a
-    setting gets labelled: read, change that one setting in the truck, read again, diff."""
+    """Compare two saved snapshots (read DIDs or watch frames); print which bytes/bits
+    changed. This is how a setting gets labelled: snapshot, change ONE setting, snapshot, diff."""
     b = json.load(open(a.before)); c = json.load(open(a.after))
-    bd, cd = b.get('dids', {}), c.get('dids', {})
     any_change = False
-    for did in sorted(set(bd) | set(cd)):
-        x, y = bd.get(did), cd.get(did)
-        if isinstance(x, str) and isinstance(y, str) and x != y:
-            any_change = True
-            xb = bytes.fromhex(x); yb = bytes.fromhex(y)
-            print(f'DID {did} changed:')
-            for i in range(max(len(xb), len(yb))):
-                ox = xb[i] if i < len(xb) else None
-                oy = yb[i] if i < len(yb) else None
-                if ox != oy:
-                    bits = (ox or 0) ^ (oy or 0)
-                    print('  byte %d: %02X -> %02X   (bits changed: 0x%02X)' %
-                          (i, ox or 0, oy or 0, bits))
+    for key, noun in (('dids', 'DID'), ('frames', 'ID')):
+        bd, cd = b.get(key, {}), c.get(key, {})
+        for k in sorted(set(bd) | set(cd)):
+            x, y = bd.get(k), cd.get(k)
+            if isinstance(x, str) and isinstance(y, str) and x != y:
+                any_change = True
+                print(f'{noun} {k} changed:')
+                for line in _byte_bit_diff(x, y):
+                    print('  ' + line)
     if not any_change:
-        print('No DID byte changes between the two reads.')
+        print('No byte changes between the two snapshots.')
 
 def main():
     ap = argparse.ArgumentParser(add_help=True, description=__doc__,
@@ -147,6 +208,10 @@ def main():
     p = sub.add_parser('sniff'); common(p); p.add_argument('--seconds', type=float, default=5); p.set_defaults(fn=cmd_sniff)
     p = sub.add_parser('discover'); common(p); p.add_argument('--start', default='0x600'); p.add_argument('--end', default='0x7FF'); p.set_defaults(fn=cmd_discover)
     p = sub.add_parser('read'); common(p); p.add_argument('--tx', default=None); p.add_argument('--rx', default=None); p.add_argument('--save', default=None); p.set_defaults(fn=cmd_read)
+    p = sub.add_parser('watch'); common(p)
+    p.add_argument('--seconds', type=float, default=0, help='0 = until Ctrl-C')
+    p.add_argument('--ids', default=None, help='comma hex list; default = CSM + config bitmaps')
+    p.add_argument('--save', default=None); p.set_defaults(fn=cmd_watch)
     p = sub.add_parser('diff'); p.add_argument('before'); p.add_argument('after'); p.set_defaults(fn=cmd_diff)
     a = ap.parse_args()
     a.fn(a)

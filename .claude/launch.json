@@ -21,6 +21,11 @@
       "name": "tazer-discover (COM3, IHS)",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-I", "-u", "tazer_config/tazerctl.py", "discover", "--port", "COM3", "--bus", "s4"]
+    },
+    {
+      "name": "tazer-watch CSM (COM3, CAN-C)",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-I", "-u", "tazer_config/tazerctl.py", "watch", "--port", "COM3", "--bus", "s6"]
     }
   ]
 }

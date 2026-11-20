@@ -104,12 +104,17 @@ what the Windows session measured.
 Two independent tracks; the diff tooling is ready (`tools/fullread.py` + `tazerctl.py diff`):
 
 **A. Truck, SAFE (listen-only) — find customer-setting bits via broadcast bitmaps.**
-   1. `python -I tazer_config\tazerctl.py sniff --port COMx --bus s6 --seconds 8` and note the
-      bytes of `0x3B3/0x3B4/0x3C2` (CSM) and `0x3E8-0x3EB` (vehicle config).  [add a targeted
-      capture of just those IDs if helpful]
-   2. Change ONE customer setting in the Uconnect menu, capture again, diff the bytes → the bit that
-      moved is that setting. Because the broadcast "appears identical" to the DID, that same bit maps
-      back to the `0146/0147` (CSM) or `0122-0126` DID. This needs NO write and NO UDS session.
+   Use the `watch` command (listen-only M1, cannot disturb the bus):
+   ```
+   python -I tazer_config\tazerctl.py watch --port COMx --bus s6
+   ```
+   It prints a baseline for each watched bitmap ID (`0x3B3/0x3B4/0x3C2` CSM, `0x3E8-0x3EB`+ vehicle
+   config, `0x3F0/0x3F2` ECU config) then shows **live byte/bit changes**. Change ONE Uconnect-menu
+   setting and the moved bit prints immediately. Because the broadcast "appears identical" to the DID
+   read, that same bit maps back to the `0146/0147` (CSM) or `0122-0126` DID. NO write, NO UDS session.
+   (`--ids 3B3,3B4,3C2` narrows it; `--save x.json` + `tazerctl.py diff` compares across key cycles.)
+   If a bitmap ID never shows a baseline, it may only broadcast at key-on — cycle the key. If none of
+   these IDs appear on s6, try `--bus s4` (they are listed on both CAN-C and CAN-IHS).
 
 **B. Per-bit labels for the hidden proxi config (dealer settings).** Still needs one of:
    - A **known-good writer** (AlfaOBD/wiTECH/Tazer): change one dealer setting, `fullread`
