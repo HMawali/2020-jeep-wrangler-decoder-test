@@ -16,9 +16,10 @@ work and tells you exactly where the last session stopped and what to do next.
 - The tool is in **`tazer_config/`** (pure Python, zero-dep). It is **READ-ONLY**.
 
 ## Hard rules
-- `write` (UDS `0x2E`) now exists but is **hard-gated** (dry-run default, reads first, saves a
-  revert file, only `--yes` transmits). Keep that discipline; do **not** loosen it, and do **not**
-  add `0x27` SecurityAccess or `0x14` DTC-clear. A wrong write can brick a body module.
+- `write` (UDS `0x2E`) and `iocontrol` (UDS `0x2F` forced output, auto-releases) now exist but are
+  **hard-gated** (dry-run default, reads/saves revert where applicable, only `--yes` transmits).
+  Keep that discipline; do **not** loosen it, and do **not** add `0x27` SecurityAccess or `0x14`
+  DTC-clear. A wrong write can brick a body module; a forced output actuates real hardware.
 - **Never fabricate** a CAN frame, a DID↔setting-name mapping, a write value, or a seed/key. If a
   value is not verified, say it's unverified. Writes must be read-modify-write from a live read.
 - Vehicle PARKED, key RUN. Prefer silent/listen-only for exploration. Don't fuzz the 500k

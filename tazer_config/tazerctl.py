@@ -267,6 +267,57 @@ def cmd_write(a):
         print('# readback : ' + back.hex(' ').upper() + ('   == new (confirmed)' if back == new else '   != new (!)'))
     link.close()
 
+def cmd_iocontrol(a):
+    """DANGEROUS: force a BCM output ON then release it (UDS 0x2F IOControl) — the Tazer
+    light/actuation mechanism. Use this to MAP which 0xD1xx DID = which physical lamp:
+    force one, watch the truck, it auto-releases. Dry-run by default; only --yes transmits.
+    Firmware-confirmed shape (word 0x3e50 lamp driver -> BCM 0x620):  2F <did> 03 <state>
+    release:  2F <did> 00 (returnControlToECU). Parked, key RUN. See HANDOFF.md."""
+    port = pick_port(a.port); bus = bus_of(a.bus)
+    cat = did_catalog.load()
+    tx = (int(a.tx, 16) if isinstance(a.tx, str) else a.tx) or cat.bcm_request_id
+    rx = (int(a.rx, 16) if isinstance(a.rx, str) else a.rx) if a.rx is not None else None
+    did = int(a.did, 16)
+    opt = int(a.opt, 16)
+    state = bytes.fromhex(a.state) if a.state else b''
+    rel_opt = int(a.release_opt, 16)
+
+    force = bytes([0x2F, (did >> 8) & 0xFF, did & 0xFF, opt]) + state
+    release = bytes([0x2F, (did >> 8) & 0xFF, did & 0xFF, rel_opt])
+    print('\n# IOControl on module 0x%03X, DID 0x%04X  (0xD1xx = BCM lamp outputs)' % (tx, did))
+    print('#   FORCE   frame : ' + force.hex(' ').upper() + '   (opt 0x%02X%s)' %
+          (opt, (' shortTermAdjustment, state=%s' % state.hex().upper()) if opt == 0x03 else ''))
+    print('#   RELEASE frame : ' + release.hex(' ').upper() + '   (opt 0x%02X returnControlToECU)' % rel_opt)
+    print('#   hold          : %.1fs' % a.hold)
+
+    if not a.yes:
+        print('\n# DRY-RUN. Nothing was sent. Re-run with --yes to actually actuate.')
+        print('# NOTE: state byte / exact release form are not firmware-confirmed — verify on bench.')
+        return
+
+    link = SlcanLink(port); link.open(bus, listen_only=False)
+    uds = UdsClient(link)
+    ignore = {f.id for f in link.collect(2.0)}; link.drain()
+    try:
+        s = uds.diagnostic_session(0x03, tx, rx)
+        print('# session 0x10 03 -> ' + (('DENIED %s' % nrc_name(s.nrc)) if (s and s.is_negative)
+              else (('OK ' + s.hex) if s else 'no response')))
+    except Exception as e:
+        print('# session error:', e)
+    uds.tester_present(tx)
+    try:
+        w = uds.io_control(did, opt, state, tx, rx, ignore=ignore)
+        print('# force resp : ' + (('NRC 0x%02X (%s)' % (w.nrc, nrc_name(w.nrc))) if (w and w.is_negative)
+              else (('POSITIVE ' + w.hex) if w else 'no response')))
+        print('# holding %.1fs — watch the truck for which lamp/output energised…' % a.hold)
+        time.sleep(a.hold)
+    finally:
+        r = uds.io_control(did, rel_opt, b'', tx, rx, ignore=ignore)
+        print('# release resp: ' + (('NRC 0x%02X (%s)' % (r.nrc, nrc_name(r.nrc))) if (r and r.is_negative)
+              else (('POSITIVE ' + r.hex) if r else 'no response (output may stay forced until ignition cycle!)')))
+        link.close()
+
+
 def cmd_diff(a):
     """Compare two saved snapshots (read DIDs or watch frames); print which bytes/bits
     changed. This is how a setting gets labelled: snapshot, change ONE setting, snapshot, diff."""
@@ -308,6 +359,16 @@ def main():
     p.add_argument('--revert', default=None, help='restore a saved original block file')
     p.add_argument('--yes', action='store_true', help='actually transmit (without this it is a dry-run)')
     p.set_defaults(fn=cmd_write)
+    p = sub.add_parser('iocontrol', help='DANGEROUS force a BCM output on/off (UDS 0x2F) to map lamps (dry-run unless --yes)')
+    common(p)
+    p.add_argument('--tx', default=None, help='target module, default BCM 0x620'); p.add_argument('--rx', default=None)
+    p.add_argument('--did', required=True, help='output DID, e.g. 0xD1C2 (0xD1xx = BCM lamps)')
+    p.add_argument('--opt', default='0x03', help='control option: 03 shortTermAdjustment (default), 01 reset, 02 freeze')
+    p.add_argument('--state', default='01', help='state byte(s) hex for opt 0x03, e.g. 01 (on). default 01')
+    p.add_argument('--release-opt', default='0x00', help='release control option, default 0x00 returnControlToECU')
+    p.add_argument('--hold', type=float, default=2.0, help='seconds to hold the output before releasing')
+    p.add_argument('--yes', action='store_true', help='actually transmit (without this it is a dry-run)')
+    p.set_defaults(fn=cmd_iocontrol)
     p = sub.add_parser('diff'); p.add_argument('before'); p.add_argument('after'); p.set_defaults(fn=cmd_diff)
     a = ap.parse_args()
     a.fn(a)

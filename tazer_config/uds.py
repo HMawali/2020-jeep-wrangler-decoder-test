@@ -115,3 +115,12 @@ class UdsClient:
         Positive response is 0x6E <didhi> <didlo>. DANGEROUS — caller must gate this."""
         payload = bytes([0x2E, (did >> 8) & 0xFF, did & 0xFF]) + bytes(data)
         return self.request(payload, tx_id, rx_id, ignore)
+
+    def io_control(self, did, control_option, state=b'', tx_id=None, rx_id=None, ignore=frozenset()):
+        """0x2F InputOutputControlByIdentifier (forced output / actuation).
+        control_option: 0x00 returnControlToECU (release), 0x01 resetToDefault,
+        0x02 freezeCurrentState, 0x03 shortTermAdjustment (+state bytes).
+        This is how the Tazer flashes lamps: 2F D1xx 03 <state> to BCM 0x620, release 2F D1xx 00.
+        Positive response is 0x6F <didhi> <didlo> ... . DANGEROUS — caller must gate this."""
+        payload = bytes([0x2F, (did >> 8) & 0xFF, did & 0xFF, control_option & 0xFF]) + bytes(state)
+        return self.request(payload, tx_id, rx_id, ignore)

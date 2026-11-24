@@ -215,3 +215,23 @@ Pair this with `watch` (listen-only) in another window to see the matching broad
 Vehicle PARKED, key RUN. Use **silent mode** (`sniff`) for anything exploratory. The read
 path transmits only tiny well-formed UDS single frames. Do not scan/fuzz the 500k powertrain
 bus casually (it carries live torque arbitration — see `CAN_CONTROL_FINDINGS.md` §7).
+
+## 2026-11-24 — Light-show / actuation mechanism extracted; gated `iocontrol` added
+Q answered: with ONE sniffer + SGW bypass you can test ALL features (incl. light show) one bus at a
+time — the Tazer itself has a single AT90CAN controller it switches between buses (code:0973), so it
+is never on two buses at once. Both-buses-at-once (ESP32 2nd channel) is only a convenience.
+
+Firmware extraction (see analysis/FINDINGS.md "ACTUATION MECHANISM"):
+- Light/body actuations = **UDS 0x2F InputOutputControl**, NOT 0x31. Lamp driver word 0x3e50 → BCM
+  0x620. FORCE `2F <did> 03 <state>`, RELEASE `2F <did> 00`. Lamp DIDs = 0xD1xx family
+  (0xD1A8/A9, 0xD1B2/B3, 0xD1C2; community overhead-flash 0xD1BE). 0xD0xx outputs → module 0x74B.
+- DID→specific-lamp and the show choreography are icall-dispatched → NOT statically resolvable;
+  map them EMPIRICALLY on the truck.
+
+New tool command `iocontrol` (gated like `write`: dry-run default, only --yes transmits, forces one
+output then AUTO-RELEASES). Use to map each 0xD1xx DID → physical lamp:
+  python -I tazer_config\tazerctl.py iocontrol --port COMx --bus s6 --did 0xD1C2 --state 01 --hold 2 --yes
+Expect a POSITIVE 6F response + a lamp energising for 2s, then release. Try 0xD1A8, 0xD1A9, 0xD1B2,
+0xD1B3, 0xD1C2, 0xD1BE and note which lamp each lights. NOTE: state byte + release form not
+firmware-confirmed — that's exactly what the bench mapping confirms. Once mapped, a light-show
+sequencer (chained forces + delays) can be built.

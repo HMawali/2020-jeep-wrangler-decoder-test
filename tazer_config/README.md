@@ -54,6 +54,23 @@ A wrong `2E` can brick a body module. Keep the read-first / dry-run / revert dis
 
 `--bus s4` = 125k CAN-IHS (body, pins 3/11, default). `--bus s6` = 500k CAN-C (pins 6/14).
 
+## Actuations / light show — forcing BCM outputs (DANGEROUS — gated)
+The Tazer flashes lamps with **UDS `0x2F` InputOutputControl** (not `0x31`). Firmware-confirmed
+shape (lamp driver word `0x3e50` → BCM `0x620`): `2F <did> 03 <state>` to force, `2F <did> 00` to
+release. Lamp DIDs are the **`0xD1xx`** family (`0xD1A8/A9`, `0xD1B2/B3`, `0xD1C2`, community `0xD1BE`).
+
+`iocontrol` forces one output, holds, then **auto-releases** — use it to map which DID = which lamp.
+Dry-run by default; only `--yes` transmits. Parked, key **RUN**.
+```bat
+:: dry-run first (prints the exact 2F frames, sends nothing):
+python -I tazer_config\tazerctl.py iocontrol --port COM3 --bus s6 --did 0xD1C2
+
+:: actually force it for 2s then auto-release (watch which lamp lights):
+python -I tazer_config\tazerctl.py iocontrol --port COM3 --bus s6 --did 0xD1C2 --state 01 --hold 2 --yes
+```
+The state byte and exact release form are **not firmware-confirmed** — verify on the bench. Once each
+`0xD1xx`→lamp is mapped, chaining forces with delays = a light show (sequencer can then be built).
+
 ## Labelling a setting (how writes get unlocked safely)
 ```bat
 python -I tazer_config\tazerctl.py read --port COM3 --tx 0x620 --save before.json
