@@ -386,3 +386,21 @@ REMAINING (nice-to-have, for Mac or next truck visit):
   3. Fog FEATURE config (not the show): to make the yellow LED off-road fogs behave, write LED Fogs =
      0x0131 b4 0x20 (via the gated `write` cmd); Fogs En 0x0130 b4 0x02 already set.
 Raw vehicle captures (snap_*.json, watch_*.json) stayed local (gitignored) - re-capture as needed.
+
+## 2026-11-24 (Mac) — folded confirmed 0xD0xx into the 'firmware' show (remaining item #1 done)
+With the truck's full BCM lamp map confirmed (fogs D0A0/A1, brakes D0A2/A3, headlights D0A8/A9,
+high beams D0AA/AB, turns D014/D015), I:
+1) Promoted all 10 confirmed 0xD0xx into lamp_map.json `lamps` (names + confidence:confirmed) — so
+   all_lamp_dids() now returns all 20 lamps and all_on/all_off cover the full exterior.
+2) Rebuilt shows.json `firmware` to the Tazer's CONTIGUOUS OPENING sequence (ZES-128 @0x5b7a,
+   0x5b93-0x5c0d + the x2/finale tail), with the D0xx folded in exactly where the firmware sets them:
+   it wig-wags brake/marker/turn (D1xx) while alternating headlight/high-beam/fog L<->R (D0xx), then
+   the turn/reverse/marker x2 burst, all-on/all-off finale, and the white-fender tail. D039/D03A are
+   0x74B outputs (not BCM) so they're omitted. Mock-traced: the show now drives all 20 confirmed lamps
+   incl. fog/headlight/highbeam/turn.
+   Run: `python -I tazer_config\lightshow.py --port COM8 --bus s6 --mode firmware --duration 30`
+NOTE on fidelity: the opening (0x5b93-0x5c0d) is a contiguous single path = faithful. The later
+portions of the show runner branch on the show-index (R17) and the decompiler mangled the AVR reg
+args, so beyond the opening I used the clean extracted steps rather than tracing every R17 branch.
+`mega` remains the hand-built full-exterior alternative. Remaining nice-to-haves: confirm D0A3 (right
+brake) and whether any 0x74B element (D039/D03A) adds a rear lamp the BCM set misses.

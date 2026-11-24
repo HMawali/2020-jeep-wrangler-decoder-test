@@ -3,7 +3,7 @@
   "tick_ms": 20,
   "shows": {
     "firmware": {
-      "source": "firmware ZES-128 @0x5b7a (BCM 0xD1xx steps only)",
+      "source": "firmware ZES-128 @0x5b7a, contiguous opening sequence; BCM 0x620 only (D039/D03A are 0x74B, omitted). D0xx now confirmed: A0/A1=fog A2/A3=brake A8/A9=headlight AA/AB=highbeam 014/015=turn.",
       "steps": [
         {
           "blink": [
@@ -15,17 +15,33 @@
         },
         {
           "blink": [
-            "0xD1A4"
+            "0xD1A4",
+            "0xD015"
           ],
           "times": 1,
           "delay": 10
         },
         {
           "blink": [
-            "0xD1A5"
+            "0xD1A5",
+            "0xD014"
           ],
           "times": 1,
           "delay": 10
+        },
+        {
+          "on": [
+            "0xD0A8",
+            "0xD0AB",
+            "0xD0A1"
+          ]
+        },
+        {
+          "off": [
+            "0xD0A9",
+            "0xD0AA",
+            "0xD0A0"
+          ]
         },
         {
           "blink": [
@@ -42,7 +58,22 @@
           "delay": 10
         },
         {
+          "on": [
+            "0xD0A9",
+            "0xD0AA",
+            "0xD0A0"
+          ]
+        },
+        {
+          "off": [
+            "0xD0A8",
+            "0xD0AB",
+            "0xD0A1"
+          ]
+        },
+        {
           "blink": [
+            "0xD0A2",
             "0xD1A9"
           ],
           "times": 1,
@@ -50,6 +81,7 @@
         },
         {
           "blink": [
+            "0xD0A3",
             "0xD1A8"
           ],
           "times": 1,
@@ -60,6 +92,26 @@
             "0xD1B9"
           ],
           "times": 1,
+          "delay": 10
+        },
+        {
+          "off": [
+            "0xD0A2",
+            "0xD0A3",
+            "0xD0A0",
+            "0xD0A1",
+            "0xD0A8",
+            "0xD0A9",
+            "0xD0AA",
+            "0xD0AB"
+          ]
+        },
+        {
+          "blink": [
+            "0xD014",
+            "0xD015"
+          ],
+          "times": 2,
           "delay": 10
         },
         {

@@ -78,6 +78,56 @@
       "label": "White fender light (right)",
       "confidence": "confirmed",
       "pair": "0xD1B8"
+    },
+    "0xD0A0": {
+      "label": "Fog (left)",
+      "confidence": "confirmed",
+      "source": "truck 2026-11-24 (Windows)"
+    },
+    "0xD0A1": {
+      "label": "Fog (right)",
+      "confidence": "confirmed",
+      "source": "truck 2026-11-24 (Windows)"
+    },
+    "0xD0A2": {
+      "label": "Brake (left, D0xx)",
+      "confidence": "confirmed",
+      "source": "truck 2026-11-24 (Windows)"
+    },
+    "0xD0A3": {
+      "label": "Brake (right, D0xx)",
+      "confidence": "confirmed",
+      "source": "truck 2026-11-24 (Windows)"
+    },
+    "0xD0A8": {
+      "label": "Headlight (left)",
+      "confidence": "confirmed",
+      "source": "truck 2026-11-24 (Windows)"
+    },
+    "0xD0A9": {
+      "label": "Headlight (right)",
+      "confidence": "confirmed",
+      "source": "truck 2026-11-24 (Windows)"
+    },
+    "0xD0AA": {
+      "label": "High beam (left)",
+      "confidence": "confirmed",
+      "source": "truck 2026-11-24 (Windows)"
+    },
+    "0xD0AB": {
+      "label": "High beam (right)",
+      "confidence": "confirmed",
+      "source": "truck 2026-11-24 (Windows)"
+    },
+    "0xD014": {
+      "label": "Turn signal (left)",
+      "confidence": "confirmed",
+      "source": "truck 2026-11-24 (Windows)"
+    },
+    "0xD015": {
+      "label": "Turn signal (right)",
+      "confidence": "confirmed",
+      "source": "truck 2026-11-24 (Windows)"
     }
   },
   "unmapped_valid_dids": [
