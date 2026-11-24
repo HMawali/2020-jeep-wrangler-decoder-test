@@ -172,8 +172,9 @@
           "byte": 4,
           "mask": 2,
           "origin": "FUN_code_47b3@47bb",
-          "label": null,
-          "confirmed": false
+          "label": "Fogs Enabled (Tazer \"Fogs En\"; BCM fog lamps present) [firmware @47b3]",
+          "confirmed": false,
+          "label_source": "firmware (menu->config-wrapper trace)"
         },
         {
           "byte": 5,
@@ -228,8 +229,9 @@
           "byte": 1,
           "mask": 16,
           "origin": "FUN_code_47cd@47d6",
-          "label": null,
-          "confirmed": false
+          "label": "Fog Drop (Tazer \"Fog Drop\"; fogs stay on with high beams) [firmware @47cd]",
+          "confirmed": false,
+          "label_source": "firmware (menu->config-wrapper trace)"
         },
         {
           "byte": 1,
@@ -263,8 +265,9 @@
           "byte": 4,
           "mask": 32,
           "origin": "FUN_code_483f@484a",
-          "label": null,
-          "confirmed": false
+          "label": "LED Fogs (Tazer \"LED FOGS\"; set for LED/off-road fogs to stop outage flicker) [firmware @484c]",
+          "confirmed": false,
+          "label_source": "firmware (menu->config-wrapper trace)"
         }
       ]
     },

@@ -336,3 +336,24 @@ Our empirical 0x74B enumeration above is ground-truth to cross-check the firmwar
    F_CPU=16MHz (proven by the 500k CAN bit-timing constants 06/04/13), so one firmware delay-unit
    ~= 1.0ms; the show's delay=10 ~= 10ms nominal. Real cadence is limited by CAN TX time per 2F
    (why ~20ms felt right). tick_ms stays the practical knob. Recorded in shows.json _tick_note.
+
+## 2026-11-24 (Mac) — FOG config extracted from firmware (owner's aftermarket yellow off-road fogs)
+Owner's fogs: aftermarket YELLOW OFF-ROAD, on FACTORY fog wires, triggered by the FACTORY fog switch
+=> BCM-controlled (good: can be configured/flashed over CAN; the "won't work" rumor is for fogs on an
+independent switch). Traced the Tazer's fog settings menu->config-wrapper (0x8c00) to exact bits
+(now labelled in did_map.json; writes go to BCM 0x620 via 0x2E):
+  - Fogs Enabled ("Fogs En")  = DID 0x0130, byte 4, mask 0x02   [fw @47b3]
+  - LED Fogs ("LED FOGS")     = DID 0x0131, byte 4, mask 0x20   [fw @484c]  <- SET THIS for LED fogs
+  - Fog Drop ("Fog Drop")     = DID 0x0131, byte 1, mask 0x10   [fw @47cd]  (fogs stay on w/ high beam)
+  - DRLLoc is a 5-way menu; "Fog" = option value 4 (storage is a multi-bit field, not yet pinned).
+KEY INSIGHT: the fog FEATURES are implemented as BCM CONFIG writes (the fog-drop runtime @0x40e8 just
+writes config DIDs 0149/013d/0131) — the fog LAMP itself is driven NATIVELY by the BCM (switch+config),
+NOT force-driven by the Tazer, EXCEPT in the light show. So:
+  - To make LED off-road fogs behave (incl. flashing cleanly): write LED Fogs = Yes (0x0131 b4 0x20).
+    Verify Fogs En (0x0130 b4 0x02) is already set (it is, since the switch works).
+  - To FLASH fogs in the light show: the fog forced-output DID is one of the BCM outputs but the
+    firmware does NOT label it "fog" (set_output is DID-parameterized). Firmware-wide set_output DIDs:
+    D014 D015 D0A0-A3 D0A8-AB D0AD D1A4-A9 D1B2/B3 D1B8/B9 F1A6 (+ config 0F01/0F02/0010/D001).
+    TRUCK TODO: force the unmapped BCM candidates (D1AA/B4/B5/BD/BE/BF/C1/C2/C5 + the show D0xx) one at
+    a time and watch the yellow fogs: iocontrol --tx 0x620 --rx 0x504 --did 0xXXXX --state 01 --hold 4 --yes.
+    The one that lights the fogs is the fog output DID -> add to lamp_map.json + shows.json.
