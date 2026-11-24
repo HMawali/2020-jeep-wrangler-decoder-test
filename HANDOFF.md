@@ -300,3 +300,25 @@ override to `lightshow.py`. OPEN: exact firmware ms-per-tick still unknown — *
 show-runner's timer tick (the delay unit feeding blink_step @0x5b38) to lock the replay to the
 Tazer's true speed.** Couldn't match from YouTube (can't frame-count video; forums/manuals don't
 publish timing).
+
+## 2026-11-24 (Windows/COM8) — headlight/fog hunt: confirmed they're on module 0x74B (0xD0xx), not the BCM
+Research confirms the Tazer show **does flash the headlights** (and factory fogs, if equipped) — but
+those are driven on a DIFFERENT module, matching the firmware (show toggles 0xD0xx on 0x74A/0x74B).
+The BCM (0x620 / 0xD1xx) does NOT carry headlights/fogs — verified by sweeping the unmapped BCM DIDs
+(D1AA/B4/B5/BD/BE/BF/C1/C2/C5 → nothing visible). So stop looking on the BCM for them.
+- **0x74B answers UDS** (req 0x74B / resp 0x4CB; `10 03` → `50 03 00 28 00 C8`). Enumerated **20 valid
+  0xD0xx outputs** (in `lamp_map.json` → `module_0x74B`): D013 D028 D036 D039 D03A D03D D045 D046 D047
+  D04A D055 D056 D058 D05B D05D D061 D06D D081 D087 D088.
+- Bench-tested the first 5 (D013/D028/D036/D039/D03A) at state 01, engine running → **no visible lamp**.
+  15 untested. (Test via `iocontrol --tx 0x74B --rx 0x4CB --did 0xD0xx --state 01 --hold 4 --yes`.)
+
+### >>> MAC TODO (do this instead of blind-testing 20 DIDs) <<<
+The firmware already knows WHICH 0xD0xx DIDs the show drives and on which module. In the show-runner
+analysis (ZES-128 @0x5b7a, set_output @0x3e4e, blink_step @0x5b38), **extract the specific 0xD0xx DIDs
++ their target module (0x74A vs 0x74B)** used by the show's headlight/fog/marker steps — the same way
+the 0xD1xx steps were pulled into shows.json. Then:
+  1. Add those exact 0xD0xx DIDs to lamp_map.json (module_0x74B / a new module_0x74A) and label them.
+  2. Extend lightshow.py to drive a second module (it currently hardcodes TX=0x620) so shows.json steps
+     can target 0x74A/0x74B too — then the replay includes headlights/fogs and matches the Tazer fully.
+Also worth checking module **0x74A (resp 0x4CA)** — the firmware note pairs 0x74A/0x74B for 0xD0xx.
+Our empirical 0x74B enumeration above is ground-truth to cross-check the firmware extraction.

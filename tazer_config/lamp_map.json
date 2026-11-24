@@ -91,5 +91,59 @@
     "0xD1C2",
     "0xD1C5"
   ],
-  "firmware_notes": "The light show also drives 0xD0xx outputs on a DIFFERENT module (0x74A/0x74B) - NOT included here because this tool targets BCM 0x620 only. To confirm a firmware_pair/inferred name, iocontrol one DID (e.g. 0xD1B2) parked+running and watch which lamp lights; set confidence:confirmed when seen."
+  "firmware_notes": "The light show also drives 0xD0xx outputs on a DIFFERENT module (0x74A/0x74B) - NOT included here because this tool targets BCM 0x620 only. To confirm a firmware_pair/inferred name, iocontrol one DID (e.g. 0xD1B2) parked+running and watch which lamp lights; set confidence:confirmed when seen.",
+  "module_0x74B": {
+    "request": "0x74B",
+    "response": "0x4CB",
+    "bus": "s6 (500k CAN-C)",
+    "session": "10 03 accepted (50 03 00 28 00 C8)",
+    "note": "Tazer show drives 0xD0xx outputs here (firmware). Headlights/fogs expected on this module, NOT the BCM.",
+    "valid_D0xx_outputs_enumerated": [
+      "0xD013",
+      "0xD028",
+      "0xD036",
+      "0xD039",
+      "0xD03A",
+      "0xD03D",
+      "0xD045",
+      "0xD046",
+      "0xD047",
+      "0xD04A",
+      "0xD055",
+      "0xD056",
+      "0xD058",
+      "0xD05B",
+      "0xD05D",
+      "0xD061",
+      "0xD06D",
+      "0xD081",
+      "0xD087",
+      "0xD088"
+    ],
+    "tested_no_visible": [
+      "0xD013",
+      "0xD028",
+      "0xD036",
+      "0xD039",
+      "0xD03A"
+    ],
+    "untested": [
+      "0xD03D",
+      "0xD045",
+      "0xD046",
+      "0xD047",
+      "0xD04A",
+      "0xD055",
+      "0xD056",
+      "0xD058",
+      "0xD05B",
+      "0xD05D",
+      "0xD061",
+      "0xD06D",
+      "0xD081",
+      "0xD087",
+      "0xD088"
+    ],
+    "how_to_test": "iocontrol --tx 0x74B --rx 0x4CB --did 0xD0xx --state 01 --hold 4 --yes  (engine running, retry session)"
+  }
 }
