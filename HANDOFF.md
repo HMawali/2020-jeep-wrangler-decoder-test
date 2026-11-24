@@ -322,3 +322,17 @@ the 0xD1xx steps were pulled into shows.json. Then:
      can target 0x74A/0x74B too — then the replay includes headlights/fogs and matches the Tazer fully.
 Also worth checking module **0x74A (resp 0x4CA)** — the firmware note pairs 0x74A/0x74B for 0xD0xx.
 Our empirical 0x74B enumeration above is ground-truth to cross-check the firmware extraction.
+
+## 2026-11-24 (Mac) — answered the 0xD0xx/module + timing TODOs
+1) MODULE ROUTING — the show's D0xx go to the BCM, NOT 0x74B. The show's lamp driver set_output
+   (ZES-128 word 0x3e4e) routes EVERY DID to BCM 0x620 (only 0xD001 -> module 0x749). So stop
+   testing 0x74B. The firmware show drives these 0xD0xx on the **BCM 0x620**:
+     D0A0 D0A1 D0A2 D0A3 D0A8 D0A9 D0AA D0AB D014 D015 D039 D03A
+   TRUCK TODO: iocontrol --tx 0x620 --rx 0x504 --did 0xD0xx --state 01 --hold 4 --yes for each ->
+   name them (headlights/fogs/park/turn likely live here). Added to lamp_map.json
+   (show_D0xx_outputs_on_BCM); the 0x74B enumeration is a different module the show does NOT use.
+   NOTE: no second-module support needed in lightshow.py — the whole show is on BCM 0x620.
+2) TIMING — delay is Timer2-based (word 0x6e02 -> unit 0x6de4: /1024 prescaler, 16-count overflow).
+   F_CPU=16MHz (proven by the 500k CAN bit-timing constants 06/04/13), so one firmware delay-unit
+   ~= 1.0ms; the show's delay=10 ~= 10ms nominal. Real cadence is limited by CAN TX time per 2F
+   (why ~20ms felt right). tick_ms stays the practical knob. Recorded in shows.json _tick_note.

@@ -91,13 +91,17 @@
     "0xD1C2",
     "0xD1C5"
   ],
-  "firmware_notes": "The light show also drives 0xD0xx outputs on a DIFFERENT module (0x74A/0x74B) - NOT included here because this tool targets BCM 0x620 only. To confirm a firmware_pair/inferred name, iocontrol one DID (e.g. 0xD1B2) parked+running and watch which lamp lights; set confidence:confirmed when seen.",
+  "firmware_notes": "CORRECTION (Mac firmware trace 2026-11-24): the light-show set_output driver (word 0x3e4e) sends EVERY DID to BCM 0x620 (only 0xD001 -> module 0x749). So the show's 0xD0xx outputs go to the BCM, NOT module 0x74B. The truck swept 0xD0xx only on 0x74B and only 0xD1xx on the BCM, so the show's BCM 0xD0xx outputs were never tested. To confirm a firmware_pair/inferred name, iocontrol one DID parked+running and watch which lamp lights.",
+  "show_D0xx_outputs_on_BCM": {
+    "note": "These 0xD0xx DIDs are driven by the firmware light show, sent to BCM 0x620 (NOT 0x74B). TEST THESE on the BCM: iocontrol --tx 0x620 --rx 0x504 --did 0xD0xx --state 01 --hold 4 --yes. Likely the headlight/fog/park/turn channels the D1xx set doesn't cover.",
+    "dids": ["0xD0A0","0xD0A1","0xD0A2","0xD0A3","0xD0A8","0xD0A9","0xD0AA","0xD0AB","0xD014","0xD015","0xD039","0xD03A"]
+  },
   "module_0x74B": {
     "request": "0x74B",
     "response": "0x4CB",
     "bus": "s6 (500k CAN-C)",
     "session": "10 03 accepted (50 03 00 28 00 C8)",
-    "note": "Tazer show drives 0xD0xx outputs here (firmware). Headlights/fogs expected on this module, NOT the BCM.",
+    "note": "SEPARATE module that also answers UDS. The light SHOW does NOT target it (firmware set_output routes to BCM 0x620). These enumerated 0xD0xx are 0x74B's own outputs - not what the show drives. Only pursue if BCM 0xD0xx testing comes up empty.",
     "valid_D0xx_outputs_enumerated": [
       "0xD013",
       "0xD028",

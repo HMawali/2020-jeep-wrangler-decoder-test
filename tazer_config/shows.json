@@ -157,5 +157,6 @@
       ]
     }
   },
-  "_tick_note": "tick_ms=20 chosen by eye on the truck (owner picked the fastest cadence; real Tazer looked ~20-25ms/tick). Mac TODO: read the firmware timer tick for the exact value."
+  "_tick_note": "FIRMWARE TIMING (Mac trace): the delay is Timer2-based (set_output/blink_step -> delay word 0x6e02 -> unit tick word 0x6de4: TCCR2A=0x07 /1024 prescaler, TCNT2 preload 0xF0 = 16 counts/overflow). F_CPU=16MHz (proven by the canonical 500k CAN bit-timing CANBT1=06/BT2=04/BT3=13), so one firmware delay-unit ~= 1.0ms. Thus the show's delay=10 ~= 10ms nominal on-time. In practice the REAL cadence is dominated by CAN TX time per 2F frame (sent twice on the busy bus), which is why the owner's by-eye tick_ms=20 looked closest. Keep tick_ms as the practical knob; the firmware 'delay' fields are ~1ms units.",
+  "_d0xx_note": "The firmware show also sends these 0xD0xx outputs to BCM 0x620 (see lamp_map.json show_D0xx_outputs_on_BCM): D0A0-A3, D0A8-AB, D014/15, D039/3A. They are NOT in the steps below yet because their lamp effect is unconfirmed - test them on the BCM first (iocontrol --tx 0x620 --did 0xD0xx), then fold the confirmed ones in to complete the replay (incl. headlights/fogs)."
 }
