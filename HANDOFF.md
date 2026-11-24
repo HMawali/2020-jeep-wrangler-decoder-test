@@ -235,3 +235,39 @@ Expect a POSITIVE 6F response + a lamp energising for 2s, then release. Try 0xD1
 0xD1B3, 0xD1C2, 0xD1BE and note which lamp each lights. NOTE: state byte + release form not
 firmware-confirmed — that's exactly what the bench mapping confirms. Once mapped, a light-show
 sequencer (chained forces + delays) can be built.
+
+## 2026-11-24 (later, Windows/COM8) — LIGHT SHOW CONFIRMED WORKING on the truck + firmware ask
+Empirically validated the actuation end-to-end. **UDS 0x2F to BCM 0x620 DOES drive real exterior
+lamps.**
+- **Preconditions found:** needs **ENGINE RUNNING** for a stable diagnostic session — with the
+  engine OFF (key-on/accessory) the BCM dropped the `10 03` session (reads/forces failed). State
+  byte range is small: `0x01`/`0x02` accepted, `0x04+` -> requestOutOfRange. Responses are
+  intermittently dropped on the busy 500k bus — **retry the force until POSITIVE** (see
+  `scratchpad map_robust.py` approach; folded into `tazer_config/lightshow.py`).
+- **Enumerated 15 valid output DIDs** in 0xD1A0-0xD1CF: D1A4 A5 A6 A7 A8 AA B2 B4 B5 BD BE BF C1 C2
+  C5. (D1AD, D1C6 = conditionsNotCorrect — maybe engine-off-only.)
+- **Bench-mapped lamps (live-observed, in `tazer_config/lamp_map.json`):**
+  `0xD1A6`=**Brake lights** (confirmed), `0xD1A8`=**Reverse lights** (confirmed),
+  `0xD1A4`/`0xD1A5`=front fender markers L/R (tentative). A7/AA/B2 partially seen (a brake side).
+  B4/B5/BD/BE/BF/C1/C2/C5 still unmapped (likely turn signals / headlights / fogs / DRL).
+- **New tool:** `tazer_config/lightshow.py` — opens one session (retried), keep-alive, forces the
+  confirmed lamps in patterns (wig-wag / all-flash / chase / strobe / finale), releases all on
+  exit. `python -I tazer_config/lightshow.py --port COM8 --bus s6`. Runs; patterns visible but
+  coarse because only 4 lamps are confirmed and attribution is still fuzzy.
+
+### >>> OWNER REQUEST (do on the Mac): extract the lamp map + show choreography FROM FIRMWARE <<<
+Owner wants the lamp DID->lamp names and the 6 preset (+3 custom) light-show sequences pulled from
+the Tazer firmware and encoded into the tool, instead of guessing on the truck. NOTE: the earlier
+Mac pass concluded the DID->specific-lamp and the show choreography are **icall-dispatched / runtime
+menu-table driven -> not statically resolvable** (handoff 2026-11-24 top). So this needs a DEEPER
+pass on the Mac:
+  1. Resolve the indirect-call dispatch tables (the icall targets / jump tables feeding the lamp
+     driver at word 0x3e50 and the show sequencer) to recover DID->lamp and the per-show step lists.
+  2. If static resolution stays blocked, do DYNAMIC extraction (emulate the show handler, or trace
+     the frame-builder with the stashed (DID,byte,state) like the config extractor did at the 85
+     call sites) to dump each show's ordered 2F sequence + timings.
+  3. Encode results into `tazer_config/lamp_map.json` (confirmed labels) and a new `shows.json`
+     (ordered steps), and have `lightshow.py` play from `shows.json`.
+The firmware + disassembly are Mac-only (`…/sniffer_firmware/analysis/` + `decrypted/`) — NOT in
+this repo and NOT on the Windows laptop, so this step cannot be done from Windows. Our empirical
+map above is the ground-truth to cross-check the firmware extraction against.
