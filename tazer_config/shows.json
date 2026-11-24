@@ -1,0 +1,30 @@
+{
+  "_comment": "Light-show choreographies. 'firmware' is the Tazer's own opening sequence, extracted from ZES-128 (word 0x5b7a: blink_step=0x5b38, set_output=0x3e4e). Only BCM 0xD1xx lamp steps are kept (the firmware also toggles 0xD0xx outputs on module 0x74A/0x74B, which this BCM-only tool does not drive, so those steps are omitted — the visible pattern is close but not 100% identical). Delays are the firmware's tick values; tick_ms scales them to real time (firmware ms-per-tick is unknown, 50 is a reasonable default - tune by eye). Step ops: {blink:[dids],times,delay} | {on:[dids]} | {off:[dids]} | {wait:ticks} | {all_on:true}/{all_off:true}.",
+  "tick_ms": 50,
+  "shows": {
+    "firmware": {
+      "source": "firmware ZES-128 @0x5b7a (BCM 0xD1xx steps only)",
+      "steps": [
+        {"blink": ["0xD1A6","0xD1A7"], "times": 1, "delay": 10},
+        {"blink": ["0xD1A4"], "times": 1, "delay": 10},
+        {"blink": ["0xD1A5"], "times": 1, "delay": 10},
+        {"blink": ["0xD1B3"], "times": 1, "delay": 10},
+        {"blink": ["0xD1B2"], "times": 1, "delay": 10},
+        {"blink": ["0xD1A9"], "times": 1, "delay": 10},
+        {"blink": ["0xD1A8"], "times": 1, "delay": 10},
+        {"blink": ["0xD1B9"], "times": 1, "delay": 10},
+        {"blink": ["0xD1A8","0xD1A9"], "times": 2, "delay": 10},
+        {"blink": ["0xD1A4","0xD1A5"], "times": 2, "delay": 10},
+        {"all_on": true}, {"wait": 10}, {"all_off": true}, {"wait": 6},
+        {"blink": ["0xD1B8"], "times": 1, "delay": 6}
+      ]
+    },
+    "wigwag": {
+      "source": "built from confirmed L/R pairs (emergency wig-wag)",
+      "steps": [
+        {"on": ["0xD1A6"]}, {"wait": 2}, {"off": ["0xD1A6"]}, {"on": ["0xD1A7"]}, {"wait": 2}, {"off": ["0xD1A7"]},
+        {"on": ["0xD1A8"]}, {"wait": 2}, {"off": ["0xD1A8"]}, {"on": ["0xD1A9"]}, {"wait": 2}, {"off": ["0xD1A9"]}
+      ]
+    }
+  }
+}

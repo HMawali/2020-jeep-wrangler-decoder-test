@@ -89,3 +89,15 @@ in `did_map.json` (`label`, `confirmed: true`). Only then is a write for it safe
 | `did_catalog.py` + `did_map.json` | the 18 config DIDs and their bit-fields (from firmware) |
 | `tazerctl.py` | CLI: `ports` / `sniff` / `discover` / `read` / `watch` / `write` / `diff` |
 | `tazer_gui.py` | Tkinter GUI (read + save) |
+
+## Light show (firmware-extracted)
+`lightshow.py` plays choreographies from `shows.json`. The **`firmware`** show is the Tazer's own
+opening sequence, extracted from the decrypted firmware (lamp driver `set_output` word 0x3e4e,
+`blink_step` word 0x5b38, runner word 0x5b7a); lamp DIDs/names are in `lamp_map.json`.
+```bat
+python -I tazer_config\lightshow.py --port COM3 --bus s6 --mode firmware --duration 30
+```
+Vehicle PARKED, **ENGINE RUNNING** (engine-off drops the BCM session). It keeps one session alive
+and RELEASES every lamp on exit/Ctrl-C. Only BCM `0xD1xx` lamps are driven (the firmware also uses
+`0xD0xx` outputs on module 0x74A/0x74B, which this BCM-only tool omits). `tick_ms` in shows.json
+scales step timing (firmware ms/tick unknown — tune by eye).

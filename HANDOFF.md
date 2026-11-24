@@ -271,3 +271,24 @@ pass on the Mac:
 The firmware + disassembly are Mac-only (`…/sniffer_firmware/analysis/` + `decrypted/`) — NOT in
 this repo and NOT on the Windows laptop, so this step cannot be done from Windows. Our empirical
 map above is the ground-truth to cross-check the firmware extraction against.
+
+## 2026-11-24 (Mac) — LIGHT SHOW EXTRACTED FROM FIRMWARE (answered the owner request)
+Decompiled the firmware's light-show code (ZES-128, Ghidra headless — REA's provider was down but
+analyzeHeadless works directly). Found the primitives and the choreography:
+- `set_output(DID, state)` = word 0x3e4e (byte 0x7c9c): forces a lamp via 2F <DID> 03 <state>.
+- `blink_step(light1, light2, blinkCount, delay)` = word 0x5b38: ON both lamps, delay, OFF both,
+  × blinkCount — i.e. ONE light-show step, exactly ZPU's (light1,light2,blink,delay) format.
+- Show runner = word 0x5b7a; a state machine keyed on a show index. Extracted its ordered D1xx
+  step list by dataflow over the ldi args (the decompiler mangles AVR's reg-passed args, so the
+  asm slice is the better source).
+LAMP MAP (firmware L/R pairing × truck observation × ZPU light names), in lamp_map.json:
+  0xD1A6/A7 = Brake L/R (A6 truck-confirmed); 0xD1A8/A9 = Reverse L/R (A8 truck-confirmed);
+  0xD1A4/A5 = Front markers L/R (inferred); 0xD1B2/B3 and 0xD1B8/B9 = firmware pairs, names TBD.
+  (The show also toggles 0xD0xx on module 0x74A/0x74B — a DIFFERENT module, not driven by this
+  BCM-only tool, so those steps are omitted from the replay.)
+NEW: `tazer_config/shows.json` encodes the firmware opening sequence ("firmware" show) + a wig-wag.
+`lightshow.py` now loads lamp_map.json + shows.json and plays them:
+  python -I tazer_config\lightshow.py --port COM8 --bus s6 --mode firmware --duration 30
+TRUCK TODO: run `iocontrol --did 0xD1B2` (and B3/B8/B9) to name the two unknown firmware pairs;
+set confidence:confirmed in lamp_map.json. Tune shows.json tick_ms by eye (firmware ms/tick unknown,
+default 50). Then the "firmware" show is a faithful replay of the Tazer's own opening choreography.

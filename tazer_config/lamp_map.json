@@ -1,19 +1,25 @@
 {
-  "_comment": "BCM 0x620 lamp output DIDs for UDS 0x2F InputOutputControl (force 2F <did> 03 01, release 2F <did> 00). Bench-mapped empirically on the truck 2026-11-24 (engine running = stable session). The firmware's DID->lamp mapping is icall-dispatched and was NOT statically resolvable, so these are live-observed. confirmed=clearly seen; tentative=seen but attribution fuzzy.",
+  "_comment": "BCM 0x620 lamp output DIDs for UDS 0x2F InputOutputControl (force 2F <did> 03 01, release 2F <did> 00). Lamp NAMES: confirmed=seen on the truck; firmware_pair=the firmware blinks these two DIDs together as an L/R pair (extracted from the light-show code, ZES-128 word 0x5b7a); inferred=name guessed from pairing + the truck's tentative notes. The firmware's DID->name is NOT labelled in the binary, so names below are our best cross-reference of (truck observation) x (firmware L/R pairing) x (ZPU logical light list).",
   "module_request": "0x620",
   "module_response": "0x504",
   "bus": "s6 (500k CAN-C, pins 6/14)",
+  "force": "2F <did> 03 01", "release": "2F <did> 00",
+  "state_range": "0x01/0x02 accepted; 0x04+ -> requestOutOfRange",
+  "preconditions": "ENGINE RUNNING (engine-off drops the 10 03 session). Responses drop on the busy bus - retry force until POSITIVE 6F.",
   "valid_output_dids_enumerated": ["0xD1A4","0xD1A5","0xD1A6","0xD1A7","0xD1A8","0xD1AA","0xD1B2","0xD1B4","0xD1B5","0xD1BD","0xD1BE","0xD1BF","0xD1C1","0xD1C2","0xD1C5"],
   "conditions_not_correct": ["0xD1AD","0xD1C6"],
   "lamps": {
-    "0xD1A6": {"label": "Brake lights", "confirmed": true},
-    "0xD1A8": {"label": "Reverse lights", "confirmed": true},
-    "0xD1A4": {"label": "Front fender marker (left?)", "confirmed": false},
-    "0xD1A5": {"label": "Front fender marker (right?)", "confirmed": false},
-    "0xD1A7": {"label": "Brake (one side) - unconfirmed", "confirmed": false},
-    "0xD1AA": {"label": "unknown", "confirmed": false},
-    "0xD1B2": {"label": "unknown", "confirmed": false}
+    "0xD1A6": {"label": "Brake (left)",  "confidence": "confirmed",     "pair": "0xD1A7"},
+    "0xD1A7": {"label": "Brake (right)", "confidence": "firmware_pair",  "pair": "0xD1A6"},
+    "0xD1A8": {"label": "Reverse (left)","confidence": "confirmed",     "pair": "0xD1A9"},
+    "0xD1A9": {"label": "Reverse (right)","confidence": "firmware_pair","pair": "0xD1A8"},
+    "0xD1A4": {"label": "Front marker (left)",  "confidence": "inferred", "pair": "0xD1A5"},
+    "0xD1A5": {"label": "Front marker (right)", "confidence": "inferred", "pair": "0xD1A4"},
+    "0xD1B2": {"label": "unknown (firmware pair A)", "confidence": "firmware_pair", "pair": "0xD1B3"},
+    "0xD1B3": {"label": "unknown (firmware pair A)", "confidence": "firmware_pair", "pair": "0xD1B2"},
+    "0xD1B8": {"label": "unknown (firmware pair B)", "confidence": "firmware_pair", "pair": "0xD1B9"},
+    "0xD1B9": {"label": "unknown (firmware pair B)", "confidence": "firmware_pair", "pair": "0xD1B8"}
   },
-  "unmapped_valid_dids": ["0xD1B4","0xD1B5","0xD1BD","0xD1BE","0xD1BF","0xD1C1","0xD1C2","0xD1C5"],
-  "notes": "state byte valid range is small (0x01/0x02 accepted; 0x04+ -> requestOutOfRange). Actuation works with ENGINE RUNNING (session stable); engine-off made the BCM drop the diagnostic session. Responses are intermittently dropped on the busy bus - retry the force until POSITIVE."
+  "unmapped_valid_dids": ["0xD1AA","0xD1B4","0xD1B5","0xD1BD","0xD1BE","0xD1BF","0xD1C1","0xD1C2","0xD1C5"],
+  "firmware_notes": "The light show also drives 0xD0xx outputs on a DIFFERENT module (0x74A/0x74B) - NOT included here because this tool targets BCM 0x620 only. To confirm a firmware_pair/inferred name, iocontrol one DID (e.g. 0xD1B2) parked+running and watch which lamp lights; set confidence:confirmed when seen."
 }

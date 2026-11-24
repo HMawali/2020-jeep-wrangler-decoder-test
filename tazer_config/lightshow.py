@@ -8,14 +8,40 @@ bench-mapped (see lamp_map.json).
 
   python -I tazer_config/lightshow.py --port COM8 [--bus s6] [--mode police|classic] [--duration 60]
 """
-import argparse, sys, os, time, threading
+import argparse, json, sys, os, time, threading
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from canlink import SlcanLink, CanFrame, S_500K, S_125K
 from uds import UdsClient
 
 TX, RX = 0x620, 0x504
-# bench-confirmed on this truck (2026-11-24)
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+# bench-confirmed friendly names on this truck (2026-11-24)
 LAMPS = {"MARK_L": 0xD1A4, "MARK_R": 0xD1A5, "BRAKE": 0xD1A6, "REV": 0xD1A8}
+
+
+def _load_json(name):
+    try:
+        return json.load(open(os.path.join(_HERE, name)))
+    except Exception:
+        return {}
+
+
+def all_lamp_dids():
+    """Every lamp DID we might drive, from lamp_map.json (so we release them all)."""
+    m = _load_json("lamp_map.json")
+    dids = set(LAMPS.values())
+    for k in m.get("lamps", {}):
+        try: dids.add(int(k, 16))
+        except Exception: pass
+    return sorted(dids)
+
+
+def did_of(x):
+    """Accept a friendly name, a '0xD1A6' string, or an int."""
+    if isinstance(x, int): return x
+    if x in LAMPS: return LAMPS[x]
+    return int(x, 16)
 
 
 def sf(payload):
@@ -60,8 +86,44 @@ class Show:
         self.off(names); time.sleep(off_s if off_s is not None else on_s)
 
     def all_off(self):
-        for d in LAMPS.values():
+        for d in all_lamp_dids():
             self.release(d); time.sleep(0.01)
+
+    # ---- DID-level ops for the JSON (firmware) player ----
+    def on_dids(self, dids):
+        for d in dids: self.force(did_of(d))
+
+    def off_dids(self, dids):
+        for d in dids: self.release(did_of(d))
+
+    def blink_dids(self, dids, times, on_s, off_s):
+        for _ in range(max(1, times)):
+            self.on_dids(dids); time.sleep(on_s)
+            self.off_dids(dids); time.sleep(off_s)
+
+
+def play_json(show, show_name, duration):
+    """Replay a shows.json choreography (e.g. the firmware-extracted 'firmware' sequence)."""
+    doc = _load_json("shows.json")
+    tick = doc.get("tick_ms", 50) / 1000.0
+    sh = doc.get("shows", {}).get(show_name)
+    if not sh:
+        print("# no show '%s' in shows.json (have: %s)" % (show_name, ", ".join(doc.get("shows", {}))))
+        return
+    alld = all_lamp_dids()
+    print("# playing '%s' (%s)" % (show_name, sh.get("source", "")), flush=True)
+    end = time.time() + duration
+    while time.time() < end:
+        for st in sh.get("steps", []):
+            if time.time() >= end: break
+            if "blink" in st:
+                d = tick * st.get("delay", 10)
+                show.blink_dids(st["blink"], st.get("times", 1), d, d)
+            elif "on" in st:  show.on_dids(st["on"])
+            elif "off" in st: show.off_dids(st["off"])
+            elif st.get("all_on"):  show.on_dids(alld)
+            elif st.get("all_off"): show.off_dids(alld)
+            elif "wait" in st: time.sleep(tick * st["wait"])
 
 
 L = ["MARK_L"]; R = ["MARK_R"]; ALL = ["MARK_L", "MARK_R", "BRAKE", "REV"]
@@ -115,7 +177,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", required=True)
     ap.add_argument("--bus", default="s6")
-    ap.add_argument("--mode", default="police", choices=["police", "classic"])
+    json_shows = list(_load_json("shows.json").get("shows", {}).keys())
+    ap.add_argument("--mode", default="firmware", choices=["police", "classic"] + json_shows,
+                    help="firmware = the Tazer's own extracted sequence; others are built patterns")
     ap.add_argument("--duration", type=float, default=60.0)
     a = ap.parse_args()
     bus = S_500K if a.bus.lower() == "s6" else S_125K
@@ -136,7 +200,9 @@ def main():
     print(f"# {a.mode} show, {a.duration:.0f}s - filming window. Ctrl-C stops & releases.", flush=True)
     t0 = time.time()
     try:
-        (police if a.mode == "police" else classic)(show, a.duration)
+        if a.mode == "police":   police(show, a.duration)
+        elif a.mode == "classic": classic(show, a.duration)
+        else:                     play_json(show, a.mode, a.duration)
         print(f"# show complete ({time.time()-t0:.0f}s)", flush=True)
     except KeyboardInterrupt:
         print("# stopped", flush=True)
