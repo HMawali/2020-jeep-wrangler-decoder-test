@@ -292,3 +292,11 @@ NEW: `tazer_config/shows.json` encodes the firmware opening sequence ("firmware"
 TRUCK TODO: run `iocontrol --did 0xD1B2` (and B3/B8/B9) to name the two unknown firmware pairs;
 set confidence:confirmed in lamp_map.json. Tune shows.json tick_ms by eye (firmware ms/tick unknown,
 default 50). Then the "firmware" show is a faithful replay of the Tazer's own opening choreography.
+
+## 2026-11-24 (Windows/COM8) — light-show timing tuned by eye
+Played `--mode firmware` at tick_ms 20/25/30/35/55 on the truck; owner picked the **fastest (~20ms)**
+as the closest to the real Tazer. Set `shows.json tick_ms=20` as the default. Added `--tick-ms`
+override to `lightshow.py`. OPEN: exact firmware ms-per-tick still unknown — **Mac TODO: read the
+show-runner's timer tick (the delay unit feeding blink_step @0x5b38) to lock the replay to the
+Tazer's true speed.** Couldn't match from YouTube (can't frame-count video; forums/manuals don't
+publish timing).

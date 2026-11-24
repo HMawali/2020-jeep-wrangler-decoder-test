@@ -102,10 +102,10 @@ class Show:
             self.off_dids(dids); time.sleep(off_s)
 
 
-def play_json(show, show_name, duration):
+def play_json(show, show_name, duration, tick_ms=None):
     """Replay a shows.json choreography (e.g. the firmware-extracted 'firmware' sequence)."""
     doc = _load_json("shows.json")
-    tick = doc.get("tick_ms", 50) / 1000.0
+    tick = (tick_ms if tick_ms is not None else doc.get("tick_ms", 50)) / 1000.0
     sh = doc.get("shows", {}).get(show_name)
     if not sh:
         print("# no show '%s' in shows.json (have: %s)" % (show_name, ", ".join(doc.get("shows", {}))))
@@ -181,6 +181,8 @@ def main():
     ap.add_argument("--mode", default="firmware", choices=["police", "classic"] + json_shows,
                     help="firmware = the Tazer's own extracted sequence; others are built patterns")
     ap.add_argument("--duration", type=float, default=60.0)
+    ap.add_argument("--tick-ms", type=float, default=None,
+                    help="override shows.json tick_ms (ms per firmware tick) for JSON shows")
     a = ap.parse_args()
     bus = S_500K if a.bus.lower() == "s6" else S_125K
     link = SlcanLink(a.port); link.open(bus, listen_only=False)
@@ -202,7 +204,7 @@ def main():
     try:
         if a.mode == "police":   police(show, a.duration)
         elif a.mode == "classic": classic(show, a.duration)
-        else:                     play_json(show, a.mode, a.duration)
+        else:                     play_json(show, a.mode, a.duration, a.tick_ms)
         print(f"# show complete ({time.time()-t0:.0f}s)", flush=True)
     except KeyboardInterrupt:
         print("# stopped", flush=True)
