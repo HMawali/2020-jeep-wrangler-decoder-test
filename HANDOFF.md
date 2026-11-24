@@ -357,3 +357,32 @@ NOT force-driven by the Tazer, EXCEPT in the light show. So:
     TRUCK TODO: force the unmapped BCM candidates (D1AA/B4/B5/BD/BE/BF/C1/C2/C5 + the show D0xx) one at
     a time and watch the yellow fogs: iocontrol --tx 0x620 --rx 0x504 --did 0xXXXX --state 01 --hold 4 --yes.
     The one that lights the fogs is the fog output DID -> add to lamp_map.json + shows.json.
+
+## 2026-11-24 (Windows/COM8) — FULL EXTERIOR LAMP MAP COMPLETE + mega show (session summary)
+All exterior lamps are now bench-confirmed on the **BCM 0x620** (req 0x620 / resp 0x504, s6 500k,
+ENGINE RUNNING, UDS 2F force `2F <did> 03 01` / release `2F <did> 00`). This corrected the earlier
+"turn signals not injectable" note — they ARE reachable as BCM forced-outputs (just not via comfort-bus
+status-frame injection).
+
+CONFIRMED LAMP DIDs (in lamp_map.json):
+  D0A0/D0A1 = Fog L/R            D0A8/D0A9 = Headlight L/R
+  D0AA/D0AB = High beam L/R      D014/D015 = Turn signal L/R
+  D0A2/D0A3 = Brake L/R (A2 seen; A3 inferred pair)
+  D1A6/D1A7 = Tail-brake L/R     D1A8/D1A9 = Reverse L/R
+  D1A4/D1A5 = Front marker L/R   D1B2 = Center brake (CHMSL)   D1B8/D1B9 = White fender L/R
+  (D039/D03A: in firmware show list but would NOT force on the BCM - they are 0x74B's outputs; the
+   firmware set_output routes everything else to BCM. Skip them for the BCM replay.)
+
+TOOL: lightshow.py now has modes police / classic / mega / firmware / wigwag.
+  - `mega` = full-exterior police choreography (headlights/high beams/fogs/turns + rear). Python-coded.
+  - `firmware` = Tazer's extracted opening sequence from shows.json (0xD1xx steps only so far).
+  Run: `python -I tazer_config/lightshow.py --port COM8 --bus s6 --mode mega --duration 60` (engine running).
+
+REMAINING (nice-to-have, for Mac or next truck visit):
+  1. Fold the confirmed 0xD0xx lamps into shows.json's `firmware` steps (the Mac extracted the show
+     also drives D0A0-A3/D0A8-AB/D014/D015 on the BCM) so the firmware replay includes headlights/fogs/
+     turns and matches the Tazer's real opening show exactly (currently mega covers them, firmware doesn't).
+  2. Confirm D0A3 (right brake) and re-check D039/D03A on 0x74B if a rear-element is missing.
+  3. Fog FEATURE config (not the show): to make the yellow LED off-road fogs behave, write LED Fogs =
+     0x0131 b4 0x20 (via the gated `write` cmd); Fogs En 0x0130 b4 0x02 already set.
+Raw vehicle captures (snap_*.json, watch_*.json) stayed local (gitignored) - re-capture as needed.
