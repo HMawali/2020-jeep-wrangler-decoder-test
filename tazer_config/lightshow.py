@@ -17,7 +17,15 @@ TX, RX = 0x620, 0x504
 _HERE = os.path.dirname(os.path.abspath(__file__))
 
 # bench-confirmed friendly names on this truck (2026-11-24)
-LAMPS = {"MARK_L": 0xD1A4, "MARK_R": 0xD1A5, "BRAKE": 0xD1A6, "REV": 0xD1A8}
+LAMPS = {
+    "MARK_L": 0xD1A4, "MARK_R": 0xD1A5, "BRAKE": 0xD1A6, "REV": 0xD1A8,
+    # full exterior set, all BCM 0x620 (truck-confirmed 2026-11-24)
+    "TAILBRAKE_L": 0xD1A6, "TAILBRAKE_R": 0xD1A7, "REV_L": 0xD1A8, "REV_R": 0xD1A9,
+    "CHMSL": 0xD1B2, "FENDER_L": 0xD1B8, "FENDER_R": 0xD1B9,
+    "FOG_L": 0xD0A0, "FOG_R": 0xD0A1, "BRAKE_L": 0xD0A2, "BRAKE_R": 0xD0A3,
+    "HEAD_L": 0xD0A8, "HEAD_R": 0xD0A9, "HIGH_L": 0xD0AA, "HIGH_R": 0xD0AB,
+    "TURN_L": 0xD014, "TURN_R": 0xD015,
+}
 
 
 def _load_json(name):
@@ -156,6 +164,41 @@ def police(show, duration):
             break
 
 
+def mega(show, duration):
+    """Full-exterior police show: headlights, high beams, fogs, turn signals + rear."""
+    LEFT = ["HEAD_L", "HIGH_L", "FOG_L", "TURN_L"]
+    RIGHT = ["HEAD_R", "HIGH_R", "FOG_R", "TURN_R"]
+    HEADS = ["HEAD_L", "HEAD_R"]; HIGHS = ["HIGH_L", "HIGH_R"]
+    FOGS = ["FOG_L", "FOG_R"]; TURNS = ["TURN_L", "TURN_R"]
+    FRONT = LEFT + RIGHT
+    REARALL = ["BRAKE_L", "BRAKE_R", "CHMSL", "REV_L", "REV_R"]
+    end = time.time() + duration
+    while time.time() < end:
+        # 1) full-cluster wig-wag (whole left side vs whole right side)
+        for _ in range(10):
+            show.blink(LEFT, 0.08); show.blink(RIGHT, 0.08)
+        # 2) headlight-only fast wig-wag
+        for _ in range(18):
+            show.blink(["HEAD_L"], 0.05); show.blink(["HEAD_R"], 0.05)
+        # 3) high-beam double-strobe (both)
+        for _ in range(10):
+            show.blink(HIGHS, 0.04, 0.04); show.blink(HIGHS, 0.04, 0.18)
+        # 4) turn + fog cross (left pair vs right pair)
+        for _ in range(14):
+            show.blink(["TURN_L", "FOG_L"], 0.07); show.blink(["TURN_R", "FOG_R"], 0.07)
+        # 5) front machine-gun strobe
+        for _ in range(26):
+            show.blink(FRONT, 0.03)
+        # 6) rear flash while fronts alternate
+        for _ in range(10):
+            show.on(REARALL); show.blink(LEFT, 0.06); show.blink(RIGHT, 0.06); show.off(REARALL)
+        # 7) group cascade: heads -> highs -> fogs -> turns
+        for _ in range(5):
+            show.blink(HEADS, 0.07); show.blink(HIGHS, 0.07); show.blink(FOGS, 0.07); show.blink(TURNS, 0.07)
+        if time.time() >= end:
+            break
+
+
 def classic(show, duration):
     end = time.time() + duration
     while time.time() < end:
@@ -178,8 +221,9 @@ def main():
     ap.add_argument("--port", required=True)
     ap.add_argument("--bus", default="s6")
     json_shows = list(_load_json("shows.json").get("shows", {}).keys())
-    ap.add_argument("--mode", default="firmware", choices=["police", "classic"] + json_shows,
-                    help="firmware = the Tazer's own extracted sequence; others are built patterns")
+    ap.add_argument("--mode", default="firmware", choices=["police", "classic", "mega"] + json_shows,
+                    help="firmware = the Tazer's own extracted sequence; mega = full-exterior police "
+                         "(headlights/high beams/fogs/turns); others are built patterns")
     ap.add_argument("--duration", type=float, default=60.0)
     ap.add_argument("--tick-ms", type=float, default=None,
                     help="override shows.json tick_ms (ms per firmware tick) for JSON shows")
@@ -204,6 +248,7 @@ def main():
     try:
         if a.mode == "police":   police(show, a.duration)
         elif a.mode == "classic": classic(show, a.duration)
+        elif a.mode == "mega":   mega(show, a.duration)
         else:                     play_json(show, a.mode, a.duration, a.tick_ms)
         print(f"# show complete ({time.time()-t0:.0f}s)", flush=True)
     except KeyboardInterrupt:
