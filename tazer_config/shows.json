@@ -207,6 +207,409 @@
           ]
         }
       ]
+    },
+    "mega": {
+      "source": "hand-built full-exterior police (headlights/high beams/fogs/turns + rear)",
+      "steps": [
+        {
+          "repeat": 10,
+          "steps": [
+            {
+              "blink": [
+                "0xD0A8",
+                "0xD0AA",
+                "0xD0A0",
+                "0xD014"
+              ],
+              "delay": 4
+            },
+            {
+              "blink": [
+                "0xD0A9",
+                "0xD0AB",
+                "0xD0A1",
+                "0xD015"
+              ],
+              "delay": 4
+            }
+          ]
+        },
+        {
+          "repeat": 18,
+          "steps": [
+            {
+              "blink": [
+                "0xD0A8"
+              ],
+              "delay": 2
+            },
+            {
+              "blink": [
+                "0xD0A9"
+              ],
+              "delay": 2
+            }
+          ]
+        },
+        {
+          "repeat": 10,
+          "steps": [
+            {
+              "blink": [
+                "0xD0AA",
+                "0xD0AB"
+              ],
+              "delay": 2,
+              "off": 2
+            },
+            {
+              "blink": [
+                "0xD0AA",
+                "0xD0AB"
+              ],
+              "delay": 2,
+              "off": 9
+            }
+          ]
+        },
+        {
+          "repeat": 14,
+          "steps": [
+            {
+              "blink": [
+                "0xD014",
+                "0xD0A0"
+              ],
+              "delay": 3
+            },
+            {
+              "blink": [
+                "0xD015",
+                "0xD0A1"
+              ],
+              "delay": 3
+            }
+          ]
+        },
+        {
+          "repeat": 26,
+          "steps": [
+            {
+              "blink": [
+                "0xD0A8",
+                "0xD0AA",
+                "0xD0A0",
+                "0xD014",
+                "0xD0A9",
+                "0xD0AB",
+                "0xD0A1",
+                "0xD015"
+              ],
+              "delay": 1
+            }
+          ]
+        },
+        {
+          "repeat": 10,
+          "steps": [
+            {
+              "on": [
+                "0xD0A2",
+                "0xD0A3",
+                "0xD1B2",
+                "0xD1A8",
+                "0xD1A9"
+              ]
+            },
+            {
+              "blink": [
+                "0xD0A8",
+                "0xD0AA",
+                "0xD0A0",
+                "0xD014"
+              ],
+              "delay": 3
+            },
+            {
+              "blink": [
+                "0xD0A9",
+                "0xD0AB",
+                "0xD0A1",
+                "0xD015"
+              ],
+              "delay": 3
+            },
+            {
+              "off": [
+                "0xD0A2",
+                "0xD0A3",
+                "0xD1B2",
+                "0xD1A8",
+                "0xD1A9"
+              ]
+            }
+          ]
+        },
+        {
+          "repeat": 5,
+          "steps": [
+            {
+              "blink": [
+                "0xD0A8",
+                "0xD0A9"
+              ],
+              "delay": 3
+            },
+            {
+              "blink": [
+                "0xD0AA",
+                "0xD0AB"
+              ],
+              "delay": 3
+            },
+            {
+              "blink": [
+                "0xD0A0",
+                "0xD0A1"
+              ],
+              "delay": 3
+            },
+            {
+              "blink": [
+                "0xD014",
+                "0xD015"
+              ],
+              "delay": 3
+            }
+          ]
+        }
+      ]
+    },
+    "police": {
+      "source": "hand-built police (D1xx marker/brake/reverse strobes)",
+      "steps": [
+        {
+          "repeat": 26,
+          "steps": [
+            {
+              "blink": [
+                "0xD1A4"
+              ],
+              "delay": 2
+            },
+            {
+              "blink": [
+                "0xD1A5"
+              ],
+              "delay": 2
+            }
+          ]
+        },
+        {
+          "repeat": 40,
+          "steps": [
+            {
+              "blink": [
+                "0xD1A4"
+              ],
+              "delay": 1
+            },
+            {
+              "blink": [
+                "0xD1A5"
+              ],
+              "delay": 1
+            }
+          ]
+        },
+        {
+          "repeat": 8,
+          "steps": [
+            {
+              "blink": [
+                "0xD1A4"
+              ],
+              "delay": 1,
+              "off": 1
+            },
+            {
+              "blink": [
+                "0xD1A4"
+              ],
+              "delay": 1,
+              "off": 5
+            },
+            {
+              "blink": [
+                "0xD1A5"
+              ],
+              "delay": 1,
+              "off": 1
+            },
+            {
+              "blink": [
+                "0xD1A5"
+              ],
+              "delay": 1,
+              "off": 5
+            }
+          ]
+        },
+        {
+          "repeat": 20,
+          "steps": [
+            {
+              "blink": [
+                "0xD1A4",
+                "0xD1A6"
+              ],
+              "delay": 2
+            },
+            {
+              "blink": [
+                "0xD1A5",
+                "0xD1A8"
+              ],
+              "delay": 2
+            }
+          ]
+        },
+        {
+          "repeat": 30,
+          "steps": [
+            {
+              "blink": [
+                "0xD1A4",
+                "0xD1A5",
+                "0xD1A6",
+                "0xD1A8"
+              ],
+              "delay": 1
+            }
+          ]
+        },
+        {
+          "repeat": 16,
+          "steps": [
+            {
+              "on": [
+                "0xD1A6",
+                "0xD1A8"
+              ]
+            },
+            {
+              "blink": [
+                "0xD1A4"
+              ],
+              "delay": 1
+            },
+            {
+              "blink": [
+                "0xD1A5"
+              ],
+              "delay": 1
+            },
+            {
+              "off": [
+                "0xD1A6",
+                "0xD1A8"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "classic": {
+      "source": "hand-built classic (sweep + all-flash)",
+      "steps": [
+        {
+          "repeat": 6,
+          "steps": [
+            {
+              "blink": [
+                "0xD1A4"
+              ],
+              "delay": 11
+            },
+            {
+              "blink": [
+                "0xD1A5"
+              ],
+              "delay": 11
+            }
+          ]
+        },
+        {
+          "repeat": 4,
+          "steps": [
+            {
+              "blink": [
+                "0xD1A4",
+                "0xD1A5",
+                "0xD1A6"
+              ],
+              "delay": 9
+            }
+          ]
+        },
+        {
+          "repeat": 3,
+          "steps": [
+            {
+              "blink": [
+                "0xD1A4"
+              ],
+              "delay": 8,
+              "off": 0
+            },
+            {
+              "blink": [
+                "0xD1A5"
+              ],
+              "delay": 8,
+              "off": 0
+            },
+            {
+              "blink": [
+                "0xD1A6"
+              ],
+              "delay": 8,
+              "off": 0
+            },
+            {
+              "blink": [
+                "0xD1A8"
+              ],
+              "delay": 8,
+              "off": 0
+            }
+          ]
+        },
+        {
+          "repeat": 8,
+          "steps": [
+            {
+              "blink": [
+                "0xD1A4",
+                "0xD1A5",
+                "0xD1A6",
+                "0xD1A8"
+              ],
+              "delay": 5
+            }
+          ]
+        },
+        {
+          "blink": [
+            "0xD1A4",
+            "0xD1A5",
+            "0xD1A6",
+            "0xD1A8"
+          ],
+          "delay": 50,
+          "off": 0
+        }
+      ]
     }
   },
   "_tick_note": "FIRMWARE TIMING (Mac trace): the delay is Timer2-based (set_output/blink_step -> delay word 0x6e02 -> unit tick word 0x6de4: TCCR2A=0x07 /1024 prescaler, TCNT2 preload 0xF0 = 16 counts/overflow). F_CPU=16MHz (proven by the canonical 500k CAN bit-timing CANBT1=06/BT2=04/BT3=13), so one firmware delay-unit ~= 1.0ms. Thus the show's delay=10 ~= 10ms nominal on-time. In practice the REAL cadence is dominated by CAN TX time per 2F frame (sent twice on the busy bus), which is why the owner's by-eye tick_ms=20 looked closest. Keep tick_ms as the practical knob; the firmware 'delay' fields are ~1ms units.",

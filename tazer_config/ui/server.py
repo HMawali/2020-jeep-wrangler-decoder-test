@@ -438,35 +438,47 @@ def show_start(name, duration=30.0, tick_ms=None):
             SESSION.ensure_session(tx, rx)
         end = time.time() + float(duration)
         alld = _all_lamp_dids()
-        try:
-            while time.time() < end and not SESSION.show_stop.is_set():
-                for st in sh.get('steps', []):
-                    if SESSION.show_stop.is_set() or time.time() >= end:
-                        break
+
+        def done():
+            return SESSION.show_stop.is_set() or time.time() >= end
+
+        def leaf(st):  # one non-repeat step, under lock
+            if 'blink' in st:
+                ds = [didof(x) for x in st['blink']]
+                on_s = tick * st.get('delay', 10)
+                off_s = tick * st.get('off', st.get('delay', 10))
+                for _ in range(max(1, st.get('times', 1))):
+                    for d in ds: force(d)
+                    time.sleep(on_s)
+                    for d in ds: release(d)
+                    time.sleep(off_s)
+            elif 'on' in st:
+                for x in st['on']: force(didof(x))
+            elif 'off' in st:
+                for x in st['off']: release(didof(x))
+            elif st.get('all_on'):
+                for d in alld: force(d)
+            elif st.get('all_off'):
+                for d in alld: release(d)
+            elif 'wait' in st:
+                time.sleep(tick * st['wait'])
+
+        def run_steps(steps):
+            for st in steps:
+                if done():
+                    return
+                if 'repeat' in st:
+                    for _ in range(max(1, int(st.get('repeat', 1)))):
+                        if done():
+                            return
+                        run_steps(st.get('steps', []))
+                else:
                     with SESSION.lock:
-                        if 'blink' in st:
-                            ds = [didof(x) for x in st['blink']]
-                            for _ in range(max(1, st.get('times', 1))):
-                                for d in ds:
-                                    force(d)
-                                time.sleep(tick * st.get('delay', 10))
-                                for d in ds:
-                                    release(d)
-                                time.sleep(tick * st.get('delay', 10))
-                        elif 'on' in st:
-                            for x in st['on']:
-                                force(didof(x))
-                        elif 'off' in st:
-                            for x in st['off']:
-                                release(didof(x))
-                        elif st.get('all_on'):
-                            for d in alld:
-                                force(d)
-                        elif st.get('all_off'):
-                            for d in alld:
-                                release(d)
-                        elif 'wait' in st:
-                            time.sleep(tick * st['wait'])
+                        leaf(st)
+
+        try:
+            while not done():
+                run_steps(sh.get('steps', []))
         finally:
             with SESSION.lock:
                 for d in alld:

@@ -121,17 +121,28 @@ def play_json(show, show_name, duration, tick_ms=None):
     alld = all_lamp_dids()
     print("# playing '%s' (%s)" % (show_name, sh.get("source", "")), flush=True)
     end = time.time() + duration
-    while time.time() < end:
-        for st in sh.get("steps", []):
-            if time.time() >= end: break
-            if "blink" in st:
-                d = tick * st.get("delay", 10)
-                show.blink_dids(st["blink"], st.get("times", 1), d, d)
+
+    def run_steps(steps):
+        for st in steps:
+            if time.time() >= end:
+                return
+            if "repeat" in st:
+                for _ in range(max(1, int(st.get("repeat", 1)))):
+                    if time.time() >= end:
+                        return
+                    run_steps(st.get("steps", []))
+            elif "blink" in st:
+                on_s = tick * st.get("delay", 10)
+                off_s = tick * st.get("off", st.get("delay", 10))
+                show.blink_dids(st["blink"], st.get("times", 1), on_s, off_s)
             elif "on" in st:  show.on_dids(st["on"])
             elif "off" in st: show.off_dids(st["off"])
             elif st.get("all_on"):  show.on_dids(alld)
             elif st.get("all_off"): show.off_dids(alld)
             elif "wait" in st: time.sleep(tick * st["wait"])
+
+    while time.time() < end:
+        run_steps(sh.get("steps", []))
 
 
 L = ["MARK_L"]; R = ["MARK_R"]; ALL = ["MARK_L", "MARK_R", "BRAKE", "REV"]
