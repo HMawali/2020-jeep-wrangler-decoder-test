@@ -221,6 +221,35 @@ def _bcm(tx=None):
     return tx if tx is not None else 0x620
 
 
+def _read_block_retry(did, tx, rx, tries=8):
+    """Read a DID block with retries (busy 500k bus drops ISO-TP responses). Returns bytes or None."""
+    for _ in range(tries):
+        SESSION.ensure_session(tx, rx)
+        r = SESSION.uds.read_did(did, tx, rx)
+        if r is not None and not r.is_negative and len(r.data) >= 3 and r.data[0] == 0x62:
+            return bytes(r.data[3:])
+        time.sleep(0.12)
+    return None
+
+
+def _write_block_retry(did, new, tx, rx, tries=8):
+    """Write a DID block with retries. Success = POSITIVE 6E, responsePending (0x78), or a
+    readback that already equals `new`. Returns a status string."""
+    for _ in range(tries):
+        cur = _read_block_retry(did, tx, rx, tries=2)
+        if cur is not None and cur == bytes(new):
+            return 'POSITIVE'            # already applied
+        w = SESSION.uds.write_did(did, new, tx, rx)
+        if w is not None and not w.is_negative:
+            return 'POSITIVE'
+        if w is not None and w.is_negative and w.nrc == 0x78:
+            time.sleep(0.2); continue    # responsePending - give it a moment, then re-check
+        time.sleep(0.15)
+    # final check
+    cur = _read_block_retry(did, tx, rx, tries=2)
+    return 'POSITIVE' if (cur is not None and cur == bytes(new)) else 'no response'
+
+
 def cfg_read(name):
     S = CATALOG['settings']['settings']
     d = S[name]
@@ -233,12 +262,9 @@ def cfg_read(name):
     tx = _bcm()
     rx = 0x504
     with SESSION.lock:
-        SESSION.ensure_session(tx, rx)
-        r = SESSION.uds.read_did(did, tx, rx)
-    if r is None or r.is_negative or not (len(r.data) >= 3 and r.data[0] == 0x62):
-        return {'name': name, 'error': 'could not read %s (%s)' % (
-            d['read']['did'], ('NRC %s' % nrc_name(r.nrc)) if (r and r.is_negative) else 'no response')}
-    blk = bytes(r.data[3:])
+        blk = _read_block_retry(did, tx, rx)
+    if blk is None:
+        return {'name': name, 'error': 'could not read %s (no response after retries)' % d['read']['did']}
     field = blk[byte] & mask if byte < len(blk) else 0
     val = None
     if d.get('values'):
@@ -265,10 +291,9 @@ def cfg_set(name, value, dry_run=True):
     with SESSION.lock:
         SESSION.ensure_session(tx, rx)
         for did, ops in by_did.items():
-            r = SESSION.uds.read_did(did, tx, rx)
-            if r is None or r.is_negative or not (len(r.data) >= 3 and r.data[0] == 0x62):
+            old = _read_block_retry(did, tx, rx)
+            if old is None:
                 return {'name': name, 'error': 'ABORT: could not read 0x%04X first - nothing written' % did}
-            old = bytes(r.data[3:])
             revert['0x%04X' % did] = old.hex().upper()
             nb = bytearray(old)
             for o in ops:
@@ -303,9 +328,7 @@ def cfg_set(name, value, dry_run=True):
             if new == old:
                 sent.append({'did': fr['did'], 'result': 'unchanged - skipped'})
                 continue
-            w = SESSION.uds.write_did(did, new, tx, rx)
-            sent.append({'did': fr['did'], 'result': ('NRC %s' % nrc_name(w.nrc)) if (w and w.is_negative)
-                         else ('POSITIVE' if w else 'no response')})
+            sent.append({'did': fr['did'], 'result': _write_block_retry(did, new, tx, rx)})
         result['status'] = 'TRANSMITTED'
         result['sent'] = sent
         return result

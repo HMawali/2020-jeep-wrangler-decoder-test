@@ -434,8 +434,8 @@
         }
       ],
       "label_source": "firmware",
-      "value_polarity_verified": false,
-      "notes": null
+      "value_polarity_verified": true,
+      "notes": "Confirmed on truck 2026-11-25: enum 3=Turn (read back after write). 5=Dedic was factory."
     },
     "DRLType": {
       "menu_label": "DRL region/type",
