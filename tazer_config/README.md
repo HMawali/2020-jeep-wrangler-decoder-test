@@ -101,3 +101,33 @@ Vehicle PARKED, **ENGINE RUNNING** (engine-off drops the BCM session). It keeps 
 and RELEASES every lamp on exit/Ctrl-C. Only BCM `0xD1xx` lamps are driven (the firmware also uses
 `0xD0xx` outputs on module 0x74A/0x74B, which this BCM-only tool omits). `tick_ms` in shows.json
 scales step timing (firmware ms/tick unknown — tune by eye).
+
+## Config settings by NAME — the full menu (firmware-derived)
+`settings_map.json` holds **37 settings** extracted from the firmware (names proven by the status-string
+formatters). Each has its DID/byte/mask on BCM `0x620`, enum value tables, and the exact write sequence
+(composite settings touch several DIDs). Drive it by name with `cfg`:
+```bat
+:: list every setting + its bit
+python -I tazer_config\tazerctl.py cfg list
+
+:: read one (engine running)
+python -I tazer_config\tazerctl.py cfg get "Fogs En"   --port COM3 --bus s6
+python -I tazer_config\tazerctl.py cfg get "DRLLoc"    --port COM3 --bus s6
+
+:: change one — DRY-RUN first (prints frames), then --yes. Saves a revert file.
+python -I tazer_config\tazerctl.py cfg set "Fogs En" on  --port COM3 --bus s6
+python -I tazer_config\tazerctl.py cfg set "Fogs En" on  --port COM3 --bus s6 --yes
+python -I tazer_config\tazerctl.py cfg set "DRLLoc" 4    --port COM3 --bus s6 --yes   :: enum code (4=Fog)
+python -I tazer_config\tazerctl.py cfg set "LED Heads" on --port COM3 --bus s6        :: composite (multi-DID)
+```
+Names are firmware-proven but the Yes/No **direction** isn't bench-verified — after a `set`, snapshot
+before/after (`tools\fullread.py` + `cfg get` / `diff`) to confirm the bit moved the way you intended.
+`module:TAZER` settings (DVD_CD/DTCM/EPSteer/SGW) are internal flags, not vehicle writes (skipped by `cfg`).
+
+## Actuations / live functions (`actuations.json`)
+Every CAN frame the firmware sends, extracted verbatim and tiered by confidence. **Confirmed:** Sway
+disconnect (`2F F1A8`→0x74A), Cooldown (`2F D01B`→PCM), Force RWD (`2F D073`→0x74B), Splash
+(`31 02 3046`→0x747), light-show lamp force (`2F <did> 03`→BCM). **Frame-only / unresolved:** PCM
+tire/gear writes, raw broadcast frames, and Line Lock / Rock Crawl / Winch / TC-Kill etc. are either
+unverified or route through icall dispatch — **bench-capture before use**. All powertrain frames are
+UNVERIFIED; do not send from this data alone.

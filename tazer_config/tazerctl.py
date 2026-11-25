@@ -335,6 +335,125 @@ def cmd_diff(a):
     if not any_change:
         print('No byte changes between the two snapshots.')
 
+_SETTINGS = None
+def _load_settings():
+    global _SETTINGS
+    if _SETTINGS is None:
+        here = os.path.dirname(os.path.abspath(__file__))
+        try:
+            _SETTINGS = json.load(open(os.path.join(here, 'settings_map.json')))
+        except Exception:
+            _SETTINGS = {'settings': {}}
+    return _SETTINGS
+
+def cmd_cfg(a):
+    """Firmware-derived config settings by NAME (settings_map.json). Subcommands:
+        cfg list                      - list every known setting + its DID/bit
+        cfg get  NAME                 - read & show the setting's current value
+        cfg set  NAME on|off|<value>  - change it (gated read-modify-write)
+    'set' is DANGEROUS and DRY-RUN by default; only --yes transmits. It RMWs every
+    write_op the firmware uses (composite settings touch several DIDs). Values' Yes/No
+    direction is firmware-derived but NOT bench-verified — confirm with before/after diff.
+    module 'TAZER' settings are internal flags, not vehicle writes (skipped)."""
+    S = _load_settings().get('settings', {})
+    if a.action == 'list':
+        print('# %d firmware-derived settings (module 0x620 BCM unless noted):' % len(S))
+        for n in sorted(S):
+            d = S[n]; r = d['read']
+            v = ('  enum=%s' % d['values']) if d.get('values') else ''
+            mod = '' if d['module'] == '0x620' else ('  [%s]' % d['module'])
+            print('  %-11s %-26s %s b%s m%s%s%s' % (n, d['menu_label'], r['did'], r['byte'], r['mask'], mod, v))
+        return
+    name = a.name
+    if name not in S:
+        cand = [n for n in S if n.lower() == (name or '').lower()]
+        if cand: name = cand[0]
+        else:
+            print('# unknown setting %r. Try: cfg list' % name); return
+    d = S[name]
+    if d['module'] == 'TAZER':
+        print('# %r is a Tazer-INTERNAL flag (%s), not a vehicle config write — skipping.' % (name, d['read']['did'])); return
+    port = pick_port(a.port); bus = bus_of(a.bus)
+    cat = did_catalog.load()
+    tx = (int(a.tx, 16) if isinstance(a.tx, str) else a.tx) or cat.bcm_request_id
+    rx = (int(a.rx, 16) if isinstance(a.rx, str) else a.rx) if a.rx is not None else None
+    link = SlcanLink(port); link.open(bus, listen_only=False)
+    uds = UdsClient(link)
+    ignore = {f.id for f in link.collect(2.0)}; link.drain()
+    try:
+        s = uds.diagnostic_session(0x03, tx, rx)
+        print('# session -> ' + (('DENIED %s' % nrc_name(s.nrc)) if (s and s.is_negative) else ('OK' if s else 'no response')))
+    except Exception as e:
+        print('# session error:', e)
+    uds.tester_present(tx)
+
+    def read_block(did):
+        r = uds.read_did(did, tx, rx, ignore=ignore)
+        if r is None or r.is_negative or not (len(r.data) >= 3 and r.data[0] == 0x62):
+            return None
+        return bytes(r.data[3:])
+
+    if a.action == 'get':
+        did = int(d['read']['did'], 16); blk = read_block(did)
+        if blk is None:
+            print('# could not read %s on this module' % d['read']['did']); link.close(); return
+        b = d['read']['byte']; mask = int(d['read']['mask'], 16)
+        if b >= len(blk):
+            print('# byte %d beyond block length %d' % (b, len(blk))); link.close(); return
+        field = blk[b] & mask
+        print('# %s [%s]  %s byte%d = 0x%02X, field(&%s)=0x%02X'
+              % (name, d['menu_label'], d['read']['did'], b, blk[b], d['read']['mask'], field))
+        if d.get('values'):
+            # enum: match by code (handles shifted/raw both ways)
+            inv = {int(k, 0): v for k, v in d['values'].items()}
+            print('#   value: %s' % inv.get(field, inv.get(blk[b], '(unmapped=0x%02X)' % field)))
+        else:
+            print('#   value: %s' % ('ON' if field else 'OFF'))
+        link.close(); return
+
+    # ---- set ----
+    want = (a.value or '').lower()
+    ops = d['write_ops']
+    print('\n# SET %s [%s]  -> %s   (%s)' % (name, d['menu_label'], a.value, d['type']))
+    print('#   write_ops: %s' % ['%s b%d m%s' % (o['did'], o['byte'], o['mask']) for o in ops])
+    frames = []
+    by_did = {}
+    for o in ops:
+        did = int(o['did'], 16); by_did.setdefault(did, []).append(o)
+    revert = {}
+    for did, oplist in by_did.items():
+        old = read_block(did)
+        if old is None:
+            print('# ABORT: could not read %s first — not writing anything.' % ('0x%04X' % did)); link.close(); return
+        revert['0x%04X' % did] = old.hex().upper()
+        nb = bytearray(old)
+        for o in oplist:
+            b = o['byte']; mask = int(o['mask'], 16)
+            if b >= len(nb):
+                print('# ABORT: byte %d beyond block len %d for %s' % (b, len(nb), o['did'])); link.close(); return
+            if d.get('values') and want not in ('on', 'off'):
+                code = int(a.value, 0) & mask
+                nb[b] = (old[b] & (~mask & 0xFF)) | code
+            else:
+                on = (want in ('on', 'yes', '1', 'true'))
+                nb[b] = (old[b] | mask) if on else (old[b] & (~mask & 0xFF))
+        frames.append((did, old, bytes(nb)))
+    for did, old, new in frames:
+        print('#   DID 0x%04X: %s -> %s' % (did, old.hex(' ').upper(), new.hex(' ').upper()))
+    revfile = a.save or ('revert_%s.json' % name.replace(' ', '_'))
+    json.dump({'setting': name, 'blocks': revert, 'module': '0x%03X' % tx,
+               'time': time.strftime('%Y-%m-%d %H:%M:%S')}, open(revfile, 'w'), indent=2)
+    print('#   saved revert -> %s' % revfile)
+    if not a.yes:
+        print('\n# DRY-RUN. Nothing sent. Re-run with --yes to write. (Then snapshot+diff to verify direction.)')
+        link.close(); return
+    for did, old, new in frames:
+        if new == old:
+            continue
+        w = uds.write_did(did, new, tx, rx, ignore=ignore)
+        print('# write 0x%04X -> %s' % (did, (('NRC %s' % nrc_name(w.nrc)) if (w and w.is_negative) else ('POSITIVE' if w else 'no response'))))
+    link.close()
+
 def main():
     ap = argparse.ArgumentParser(add_help=True, description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -370,6 +489,15 @@ def main():
     p.add_argument('--yes', action='store_true', help='actually transmit (without this it is a dry-run)')
     p.set_defaults(fn=cmd_iocontrol)
     p = sub.add_parser('diff'); p.add_argument('before'); p.add_argument('after'); p.set_defaults(fn=cmd_diff)
+    p = sub.add_parser('cfg', help='firmware-derived settings by NAME: cfg list | get NAME | set NAME on|off|<val> (set is gated, dry-run unless --yes)')
+    common(p)
+    p.add_argument('action', choices=['list', 'get', 'set'])
+    p.add_argument('name', nargs='?', help="setting name, e.g. 'Fogs En' (use quotes)")
+    p.add_argument('value', nargs='?', help='on | off | <enum value, e.g. 4 or 0x66>')
+    p.add_argument('--tx', default=None); p.add_argument('--rx', default=None)
+    p.add_argument('--save', default=None, help='revert file to save originals to')
+    p.add_argument('--yes', action='store_true', help='actually transmit (without this, dry-run)')
+    p.set_defaults(fn=cmd_cfg)
     a = ap.parse_args()
     a.fn(a)
 

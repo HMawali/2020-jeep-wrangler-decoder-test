@@ -1,0 +1,187 @@
+{
+  "_comment": "Live/actuation CAN frames extracted statically from Tazer JL 11.4.7 (ZES-128.bin). Generic TX = word 0xc522; frame = [idLo,idHi,_,DLC,payload...]. Payload shown as UDS/raw bytes; 'XX' = a runtime variable (state/value/routine arg). CONFIDENCE: 'confirmed' = feature name proven (status string in the dedicated handler) + frame extracted; 'frame_only' = exact frame extracted and module/service known, but feature label inferred from service, not proven; 'unresolved' = goes through multi-layer icall dispatch (0x833c/0x88ec/0x87b4) and is NOT statically pinned - needs a bench CAN capture before use. ALL powertrain (0x7E0) / chassis frames are UNVERIFIED and must be bench-confirmed; do NOT send them to a vehicle from this data alone.",
+  "tx_primitive": "word 0xc522 (frame struct idLo,idHi,_,DLC,8xpayload)",
+  "confirmed": {
+    "sway_disconnect": {
+      "feature": "Disconnect electronic sway bar (SwayKill)",
+      "module": "0x74A",
+      "frame": "2F F1A8 03 <st>",
+      "iso_tp": "05 2F F1 A8 03 <st>",
+      "src": "FUN_3dfd (strings SwayKill/SwayConnect/SwayDisconnect)"
+    },
+    "cooldown": {
+      "feature": "Cooldown - engine fans on-demand",
+      "module": "0x7E0 (PCM)",
+      "frame": "2F D01B 03 1C CD",
+      "iso_tp": "04 2F D0 1B 03 1C CD",
+      "src": "FUN_4391 (Cooldown:On/Off) -> FUN_3a92",
+      "warn": "PCM/powertrain - unverified, bench only"
+    },
+    "force_rwd": {
+      "feature": "Force RWD (392)",
+      "module": "0x74B",
+      "frame": "2F D073 03 <st>",
+      "iso_tp": "05 2F D0 73 03 <st>",
+      "src": "FUN_331d (ForceRWD) -> FUN_3dbc"
+    },
+    "splash_write": {
+      "feature": "Set cluster splash screen",
+      "module": "0x747 (cluster)",
+      "frame": "31 02 3046 <model>",
+      "iso_tp": "04 31 02 30 46 <model>",
+      "src": "FUN_4259 (Splash:*)",
+      "note": "model code = Splash enum value 0x64..0x69 (see settings_map)"
+    },
+    "lightshow_lamp": {
+      "feature": "Light show / lamp force",
+      "module": "0x620 (BCM)",
+      "frame": "2F <did> 03 <state>",
+      "iso_tp_force": "05 2F <didHi> <didLo> 03 <state>",
+      "iso_tp_release": "04 2F <didHi> <didLo> 00",
+      "src": "FUN_3e4e lamp driver; see lamp_map.json / shows.json"
+    }
+  },
+  "diagnostic_primitives": {
+    "tester_present": {
+      "frame": "02 3E 00",
+      "module": "<any>",
+      "src": "FUN_365a"
+    },
+    "read_dtc": {
+      "frame": "03 19 02 0D",
+      "module": "<any>",
+      "src": "FUN_368c",
+      "note": "readDTCByStatusMask 0x0D"
+    },
+    "clear_dtc": {
+      "frame": "14 ... (service 0x14)",
+      "module": "<any>",
+      "src": "FUN_433c",
+      "note": "system-wide or per-module DTC clear"
+    },
+    "session": {
+      "frame": "02 10 <sub>",
+      "src": "FUN_3cbd/4157/42ac",
+      "note": "extended session; 0x92 variant seen"
+    },
+    "ecu_reset": {
+      "frame": "02 11 01",
+      "src": "FUN_4213",
+      "note": "hardReset"
+    },
+    "obd_live": {
+      "frame": "02 01 01",
+      "module": "0x7E0",
+      "src": "FUN_36c8",
+      "note": "OBD2 mode01 - boost/vac/timers readout"
+    }
+  },
+  "frame_only": {
+    "pcm_write_A": {
+      "module": "0x7E0 (PCM)",
+      "frame": "2E 22XX 96 80",
+      "src": "FUN_42f4",
+      "inferred": "tire size / gear ratio write",
+      "warn": "powertrain - bench only"
+    },
+    "pcm_write_B": {
+      "module": "0x7E0 (PCM)",
+      "frame": "2E 0332 00 05",
+      "src": "FUN_43da",
+      "inferred": "gear ratio / axle write",
+      "warn": "powertrain - bench only"
+    },
+    "mod74b_D061": {
+      "module": "0x74B",
+      "frame": "2F D061 03 00",
+      "src": "FUN_3d4c"
+    },
+    "mod74b_D085": {
+      "module": "0x74B",
+      "frame": "2F D085 03 <st>",
+      "src": "FUN_3d06"
+    },
+    "bcm_write_A0B9": {
+      "module": "0x620 (BCM)",
+      "frame": "2E A0B9 06",
+      "src": "FUN_3d85"
+    },
+    "raw_broadcast": {
+      "note": "raw (non-ISO-TP) CAN frames the firmware broadcasts to spoof bus messages; exact feature (brake hold / dark mode / kill3honk / turncam) NOT statically pinned - capture on bench",
+      "frames": [
+        {
+          "id": "0x1C0",
+          "dlc": 6,
+          "data": "2E 00 00 00 00 00",
+          "src": "FUN_3845"
+        },
+        {
+          "id": "0x125",
+          "dlc": 3,
+          "data": "00 AB 0D",
+          "src": "FUN_3989"
+        },
+        {
+          "id": "0x077",
+          "dlc": 2,
+          "data": "00 01",
+          "src": "FUN_38c1"
+        },
+        {
+          "id": "0x277",
+          "dlc": 8,
+          "data": "00 XX 00 00 00 00 XX 00",
+          "src": "FUN_3739"
+        },
+        {
+          "id": "0x25D",
+          "dlc": 8,
+          "data": "08 00 ...",
+          "src": "FUN_3788"
+        },
+        {
+          "id": "0x22D",
+          "dlc": 8,
+          "data": "08 00 00 00 10 00 00 00",
+          "src": "FUN_37bf"
+        },
+        {
+          "id": "0x291",
+          "dlc": 8,
+          "data": "00 00 XX XX ...",
+          "src": "FUN_37fb"
+        },
+        {
+          "id": "0x1D0",
+          "dlc": 8,
+          "data": "00 00 ...",
+          "src": "FUN_3954"
+        },
+        {
+          "id": "0x328",
+          "dlc": 8,
+          "data": "10 01 00 03 00 03 00 XX",
+          "src": "FUN_5911"
+        }
+      ]
+    }
+  },
+  "unresolved": {
+    "note": "These live functions route through multi-layer icall/pointer-table dispatch and were NOT pinned to a specific frame statically. Record from a bench CAN capture before implementing.",
+    "features": [
+      "Line Lock",
+      "Rock Crawl",
+      "Turn Assist",
+      "Winch Mode RPM",
+      "hold brakes at red light",
+      "Dark Mode",
+      "Kill3Honk",
+      "TurnCAM",
+      "lockers on-demand (2WD/4Hi)",
+      "Hood Alarm",
+      "TC Kill",
+      "flash lights for tire pressure",
+      "garage door (HomeLink live)"
+    ]
+  }
+}

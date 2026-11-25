@@ -1,0 +1,970 @@
+{
+  "_comment": "AUTHORITATIVE firmware-derived settings catalog for the Tazer JL 11.4.7 config menu. Extracted statically from ZES-128.bin: each setting's status-string formatter proves name<->bit. module 0x620 = BCM (read 22 01 <did>, write 2E 01 <did> <block>, RMW). 'read' = (did,byte,mask) the formatter tests to display the value. 'write_ops' = the ordered (did,byte,mask) RMW ops the firmware performs to CHANGE it (composite settings touch several). 'values' = enum code->name. label_source=firmware (name is proven); value_polarity_verified=false (confirm Yes/No direction on bench before trusting a write). module=TAZER => a Tazer-internal RAM flag, not a vehicle write.",
+  "module_bcm": "0x620",
+  "module_bcm_resp": "0x504",
+  "bus": "s6 500k CAN-C",
+  "count": 37,
+  "settings": {
+    "Fogs En": {
+      "menu_label": "Fogs En",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0130",
+        "byte": 4,
+        "mask": "0x02"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0130",
+          "byte": 4,
+          "mask": "0x02"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "LED FOGS": {
+      "menu_label": "LED FOGS",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0131",
+        "byte": 4,
+        "mask": "0x20"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0131",
+          "byte": 4,
+          "mask": "0x20"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "Fog Drop": {
+      "menu_label": "Fog Drop",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0131",
+        "byte": 1,
+        "mask": "0x10"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0131",
+          "byte": 1,
+          "mask": "0x10"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "OneTouch": {
+      "menu_label": "OneTouch (lane change)",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0131",
+        "byte": 1,
+        "mask": "0x80"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0131",
+          "byte": 1,
+          "mask": "0x80"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "DRL Drop": {
+      "menu_label": "DRL Drop",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0131",
+        "byte": 3,
+        "mask": "0x08"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0131",
+          "byte": 3,
+          "mask": "0x08"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "HomeLink": {
+      "menu_label": "HomeLink",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0130",
+        "byte": 7,
+        "mask": "0x01"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0130",
+          "byte": 7,
+          "mask": "0x01"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": "also a Door variant via FUN_4b46 (0x0141 b1 m0x80)"
+    },
+    "CargoCam": {
+      "menu_label": "Cargo Camera",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0122",
+        "byte": 7,
+        "mask": "0x20"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0122",
+          "byte": 7,
+          "mask": "0x20"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "DimMirror": {
+      "menu_label": "Auto-dim mirror",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0124",
+        "byte": 6,
+        "mask": "0x02"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0124",
+          "byte": 6,
+          "mask": "0x02"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "DualZone": {
+      "menu_label": "HVAC Dual-Zone",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0124",
+        "byte": 5,
+        "mask": "0x04"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0124",
+          "byte": 5,
+          "mask": "0x04"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "Paddles": {
+      "menu_label": "Aux Buttons / paddles",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0124",
+        "byte": 7,
+        "mask": "0x08"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0124",
+          "byte": 7,
+          "mask": "0x08"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "PanicBtn": {
+      "menu_label": "PANIC button",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x013C",
+        "byte": 0,
+        "mask": "0x40"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x013C",
+          "byte": 0,
+          "mask": "0x40"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "TravelLnk": {
+      "menu_label": "TravelLink/XM",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0132",
+        "byte": 3,
+        "mask": "0x20"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0132",
+          "byte": 3,
+          "mask": "0x20"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "OffRdPgs": {
+      "menu_label": "Offroad Pages",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0126",
+        "byte": 7,
+        "mask": "0x10"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0126",
+          "byte": 7,
+          "mask": "0x10"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "AutoHL": {
+      "menu_label": "Auto headlights",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0124",
+        "byte": 3,
+        "mask": "0x08"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0124",
+          "byte": 3,
+          "mask": "0x08"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "FullTcase": {
+      "menu_label": "Full-time Transfer Case",
+      "type": "bool",
+      "module": "0x620",
+      "read": {
+        "did": "0x0124",
+        "byte": 3,
+        "mask": "0x40"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0124",
+          "byte": 3,
+          "mask": "0x40"
+        },
+        {
+          "did": "0x0124",
+          "byte": 1,
+          "mask": "0x0F"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "DVD_CD": {
+      "menu_label": "CD/wired audio input",
+      "type": "bool",
+      "module": "TAZER",
+      "read": {
+        "did": "0xF010",
+        "byte": 3,
+        "mask": "0x02"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0xF010",
+          "byte": 3,
+          "mask": "0x02"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": "Tazer-internal flag DID 0xF010"
+    },
+    "DTCM": {
+      "menu_label": "Declare DTCM present",
+      "type": "bool",
+      "module": "TAZER",
+      "read": {
+        "did": "0xF011",
+        "byte": 1,
+        "mask": "0x01"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0xF011",
+          "byte": 1,
+          "mask": "0x01"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": "Tazer-internal flag 0xF011"
+    },
+    "EPSteer": {
+      "menu_label": "Disable EP steering pump",
+      "type": "bool",
+      "module": "TAZER",
+      "read": {
+        "did": "0xF011",
+        "byte": 1,
+        "mask": "0x04"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0xF011",
+          "byte": 1,
+          "mask": "0x04"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": "Tazer-internal flag 0xF011"
+    },
+    "SGW": {
+      "menu_label": "SGW bypass present",
+      "type": "bool",
+      "module": "TAZER",
+      "read": {
+        "did": "0xF011",
+        "byte": 4,
+        "mask": "0x04"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0xF011",
+          "byte": 4,
+          "mask": "0x04"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": "Tazer-internal flag 0xF011"
+    },
+    "DRLLoc": {
+      "menu_label": "DRL location",
+      "type": "enum",
+      "module": "0x620",
+      "read": {
+        "did": "0x0131",
+        "byte": 3,
+        "mask": "0x07"
+      },
+      "values": {
+        "0": "N/A",
+        "1": "HiBeam",
+        "2": "LowBeam",
+        "3": "Turn",
+        "4": "Fog",
+        "5": "Dedic"
+      },
+      "write_ops": [
+        {
+          "did": "0x0131",
+          "byte": 3,
+          "mask": "0x07"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "DRLType": {
+      "menu_label": "DRL region/type",
+      "type": "enum",
+      "module": "0x620",
+      "read": {
+        "did": "0x0131",
+        "byte": 2,
+        "mask": "0xE0"
+      },
+      "values": {
+        "0": "N/A",
+        "1": "Canada",
+        "3": "USA"
+      },
+      "write_ops": [
+        {
+          "did": "0x0131",
+          "byte": 2,
+          "mask": "0xE0"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": "field is top 3 bits of byte2"
+    },
+    "LOCKER": {
+      "menu_label": "Axle lockers present",
+      "type": "enum",
+      "module": "0x620",
+      "read": {
+        "did": "0x0145",
+        "byte": 3,
+        "mask": "0x0C"
+      },
+      "values": {
+        "0": "None",
+        "4": "Rear",
+        "8": "Both"
+      },
+      "write_ops": [
+        {
+          "did": "0x0145",
+          "byte": 3,
+          "mask": "0x0C"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "Splash": {
+      "menu_label": "Cluster splash screen",
+      "type": "enum",
+      "module": "0x620",
+      "read": {
+        "did": "0x0123",
+        "byte": 2,
+        "mask": "0xFF"
+      },
+      "values": {
+        "0x64": "JLSport",
+        "0x65": "JLSahara",
+        "0x66": "JLRubi",
+        "0x67": "JTSport",
+        "0x68": "JTOvl",
+        "0x69": "JTRubi"
+      },
+      "write_ops": [
+        {
+          "did": "0x0123",
+          "byte": 2,
+          "mask": "0xFF"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": "full-byte value, not a bitmask"
+    },
+    "TPMS": {
+      "menu_label": "TPMS enable",
+      "type": "enum",
+      "module": "0x620",
+      "read": {
+        "did": "0x0124",
+        "byte": 7,
+        "mask": "0x06"
+      },
+      "values": {
+        "0": "No",
+        "4": "Yes"
+      },
+      "write_ops": [
+        {
+          "did": "0x0124",
+          "byte": 7,
+          "mask": "0x06"
+        },
+        {
+          "did": "0xF011",
+          "byte": 3,
+          "mask": "0x04"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": "also sets Tazer flag 0xF011 b3 m0x04"
+    },
+    "AUX": {
+      "menu_label": "Aux Buttons",
+      "type": "enum",
+      "module": "0x620",
+      "read": {
+        "did": "0x0146",
+        "byte": 2,
+        "mask": "0x0C"
+      },
+      "values": {
+        "1": "No",
+        "4": "Yes"
+      },
+      "write_ops": [
+        {
+          "did": "0x0146",
+          "byte": 2,
+          "mask": "0x0C"
+        },
+        {
+          "did": "0x013C",
+          "byte": 2,
+          "mask": "0x80"
+        },
+        {
+          "did": "0x0144",
+          "byte": 0,
+          "mask": "0x0C"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "TrlrBrk": {
+      "menu_label": "Trailer brake controller",
+      "type": "enum",
+      "module": "0x620",
+      "read": {
+        "did": "0x0147",
+        "byte": 1,
+        "mask": "0x07"
+      },
+      "values": {
+        "1": "No",
+        "7": "Yes"
+      },
+      "write_ops": [
+        {
+          "did": "0x0147",
+          "byte": 1,
+          "mask": "0x07"
+        },
+        {
+          "did": "0xF011",
+          "byte": 3,
+          "mask": "0x20"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "BlindSpot": {
+      "menu_label": "Blind Spot Detection",
+      "type": "enum",
+      "module": "0x620",
+      "read": {
+        "did": "0xF010",
+        "byte": 0,
+        "mask": "0x0C"
+      },
+      "values": {
+        "1": "No",
+        "12": "Yes"
+      },
+      "write_ops": [
+        {
+          "did": "0xF010",
+          "byte": 0,
+          "mask": "0x0C"
+        },
+        {
+          "did": "0x0146",
+          "byte": 4,
+          "mask": "0x01"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": "status mirror in 0xF010; BCM bit 0x0146 b4 m0x01"
+    },
+    "LED Heads": {
+      "menu_label": "Headlight type Std/LED",
+      "type": "composite",
+      "module": "0x620",
+      "read": {
+        "did": "0x0131",
+        "byte": 0,
+        "mask": "0x80"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0131",
+          "byte": 0,
+          "mask": "0x80"
+        },
+        {
+          "did": "0x0131",
+          "byte": 4,
+          "mask": "0x80"
+        },
+        {
+          "did": "0x0131",
+          "byte": 5,
+          "mask": "0x01"
+        },
+        {
+          "did": "0x013B",
+          "byte": 0,
+          "mask": "0x08"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "LED Tails": {
+      "menu_label": "Taillight type Std/LED",
+      "type": "composite",
+      "module": "0x620",
+      "read": {
+        "did": "0x0131",
+        "byte": 3,
+        "mask": "0xC0"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0131",
+          "byte": 3,
+          "mask": "0xC0"
+        },
+        {
+          "did": "0x0131",
+          "byte": 4,
+          "mask": "0x03"
+        },
+        {
+          "did": "0x013E",
+          "byte": 2,
+          "mask": "0x09"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "LED FTrn": {
+      "menu_label": "Front turn type Std/LED",
+      "type": "composite",
+      "module": "0x620",
+      "read": {
+        "did": "0x0131",
+        "byte": 4,
+        "mask": "0x50"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0131",
+          "byte": 4,
+          "mask": "0x50"
+        },
+        {
+          "did": "0x0130",
+          "byte": 3,
+          "mask": "0x60"
+        },
+        {
+          "did": "0x013B",
+          "byte": 0,
+          "mask": "0x10"
+        },
+        {
+          "did": "0x013E",
+          "byte": 1,
+          "mask": "0xC0"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "Tail": {
+      "menu_label": "Taillight region EU/USA",
+      "type": "composite",
+      "module": "0x620",
+      "read": {
+        "did": "0x0131",
+        "byte": 1,
+        "mask": "0x20"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0131",
+          "byte": 1,
+          "mask": "0x60"
+        },
+        {
+          "did": "0x0131",
+          "byte": 2,
+          "mask": "0x10"
+        },
+        {
+          "did": "0x013E",
+          "byte": 1,
+          "mask": "0x02"
+        },
+        {
+          "did": "0x013E",
+          "byte": 2,
+          "mask": "0x09"
+        },
+        {
+          "did": "0x0130",
+          "byte": 5,
+          "mask": "0x14"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "AutoHiBm": {
+      "menu_label": "Auto high-beam",
+      "type": "composite",
+      "module": "0x620",
+      "read": {
+        "did": "0x0122",
+        "byte": 3,
+        "mask": "0x08"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0122",
+          "byte": 3,
+          "mask": "0x08"
+        },
+        {
+          "did": "0x0141",
+          "byte": 7,
+          "mask": "0xE0"
+        },
+        {
+          "did": "0x0146",
+          "byte": 3,
+          "mask": "0x40"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "Cam En": {
+      "menu_label": "Backup camera enable",
+      "type": "composite",
+      "module": "0x620",
+      "read": {
+        "did": "0x0132",
+        "byte": 0,
+        "mask": "0x04"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0132",
+          "byte": 0,
+          "mask": "0x04"
+        },
+        {
+          "did": "0x0122",
+          "byte": 7,
+          "mask": "0x10"
+        },
+        {
+          "did": "0x0146",
+          "byte": 7,
+          "mask": "0x80"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "Halo En": {
+      "menu_label": "Factory halo lights",
+      "type": "composite",
+      "module": "0x620",
+      "read": {
+        "did": "0x013B",
+        "byte": 0,
+        "mask": "0x04"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x013B",
+          "byte": 0,
+          "mask": "0x04"
+        },
+        {
+          "did": "0x013E",
+          "byte": 0,
+          "mask": "0x0C"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "ProxEntry": {
+      "menu_label": "Proximity Entry",
+      "type": "composite",
+      "module": "0x620",
+      "read": {
+        "did": "0x0124",
+        "byte": 7,
+        "mask": "0x40"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0124",
+          "byte": 7,
+          "mask": "0x40"
+        },
+        {
+          "did": "0x0132",
+          "byte": 3,
+          "mask": "0x08"
+        },
+        {
+          "did": "0x0146",
+          "byte": 6,
+          "mask": "0x80"
+        },
+        {
+          "did": "0x0134",
+          "byte": 1,
+          "mask": "0x0F"
+        },
+        {
+          "did": "0x0134",
+          "byte": 2,
+          "mask": "0x0F"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "TRLR Tow": {
+      "menu_label": "Trailer Tow",
+      "type": "composite",
+      "module": "0x620",
+      "read": {
+        "did": "0x0131",
+        "byte": 0,
+        "mask": "0x40"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0131",
+          "byte": 0,
+          "mask": "0x40"
+        },
+        {
+          "did": "0x0130",
+          "byte": 6,
+          "mask": "0x78"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    },
+    "Bed115v": {
+      "menu_label": "Pickup bed 115V outlet",
+      "type": "composite",
+      "module": "0x620",
+      "read": {
+        "did": "0x0141",
+        "byte": 1,
+        "mask": "0x80"
+      },
+      "values": null,
+      "write_ops": [
+        {
+          "did": "0x0141",
+          "byte": 1,
+          "mask": "0x80"
+        },
+        {
+          "did": "0x013C",
+          "byte": 2,
+          "mask": "0x02"
+        },
+        {
+          "did": "0x0141",
+          "byte": 4,
+          "mask": "0x02"
+        }
+      ],
+      "label_source": "firmware",
+      "value_polarity_verified": false,
+      "notes": null
+    }
+  }
+}

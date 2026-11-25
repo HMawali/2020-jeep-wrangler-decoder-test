@@ -1,5 +1,15 @@
 # HANDOFF — Tazer-free Jeep JL config (read where we left off)
 
+> **UPDATE 2026-11-25 — FULL firmware extraction done (Mac).** `tazer_config/settings_map.json`
+> now has **37 config settings** (names firmware-proven, DID/byte/mask on BCM 0x620, enum tables,
+> composite write sequences) and `tazer_config/actuations.json` has the actuation/live-function CAN
+> frames (Sway/Cooldown/ForceRWD/Splash/lightshow confirmed; PCM tire/gear + raw broadcasts frame-only;
+> Line Lock/Rock Crawl/Winch/TC-Kill unresolved→bench-capture). New CLI `tazerctl cfg list|get|set`
+> drives it (gated, dry-run default). TRUCK TODO: for each setting, `cfg set … ` (dry-run → --yes) then
+> before/after `diff` to confirm the Yes/No direction (value_polarity_verified=false until you do).
+> See analysis/FINDINGS.md "FULL STATIC EXTRACTION" for the method.
+
+
 **For the next Claude Code session (running on the Windows laptop).** This file is the
 single source of truth for continuing the work. Read it first.
 

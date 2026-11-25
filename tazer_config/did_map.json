@@ -18,8 +18,9 @@
           "byte": 3,
           "mask": 8,
           "origin": "FUN_code_4899@48a4",
-          "label": null,
-          "confirmed": false
+          "label": "AutoHiBm",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 7,
@@ -32,15 +33,17 @@
           "byte": 7,
           "mask": 16,
           "origin": "FUN_code_46fa@471c",
-          "label": null,
-          "confirmed": false
+          "label": "Cam En",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 7,
           "mask": 32,
           "origin": "FUN_code_4742@474c",
-          "label": null,
-          "confirmed": false
+          "label": "CargoCam",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -74,57 +77,65 @@
           "byte": 1,
           "mask": 15,
           "origin": "FUN_code_46c7@46e4",
-          "label": null,
-          "confirmed": false
+          "label": "FullTcase",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 3,
           "mask": 8,
           "origin": "FUN_code_4b86@4b8d",
-          "label": null,
-          "confirmed": false
+          "label": "AutoHL",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 3,
           "mask": 64,
           "origin": "FUN_code_46c7@46d6",
-          "label": null,
-          "confirmed": false
+          "label": "FullTcase",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 5,
           "mask": 4,
           "origin": "FUN_code_4a8c@4a93",
-          "label": null,
-          "confirmed": false
+          "label": "DualZone",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 6,
           "mask": 2,
           "origin": "FUN_code_4970@4977",
-          "label": null,
-          "confirmed": false
+          "label": "DimMirror",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 7,
           "mask": 6,
           "origin": "FUN_code_4629@4634",
-          "label": null,
-          "confirmed": false
+          "label": "TPMS",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 7,
           "mask": 8,
           "origin": "FUN_code_4aa9@4ab3",
-          "label": null,
-          "confirmed": false
+          "label": "Paddles",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 7,
           "mask": 64,
           "origin": "FUN_code_4ade@4af4",
-          "label": null,
-          "confirmed": false
+          "label": "ProxEntry",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -151,8 +162,9 @@
           "byte": 7,
           "mask": 16,
           "origin": "FUN_code_4794@479d",
-          "label": null,
-          "confirmed": false
+          "label": "OffRdPgs",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -165,8 +177,9 @@
           "byte": 3,
           "mask": 96,
           "origin": "FUN_code_4f7b@4fba",
-          "label": null,
-          "confirmed": false
+          "label": "LED FTrn",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 4,
@@ -187,22 +200,25 @@
           "byte": 5,
           "mask": 20,
           "origin": "FUN_code_4e79@4ef2",
-          "label": null,
-          "confirmed": false
+          "label": "Tail",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 6,
           "mask": 120,
           "origin": "FUN_code_485c@487f",
-          "label": null,
-          "confirmed": false
+          "label": "TRLR Tow",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 7,
           "mask": 1,
           "origin": "FUN_code_4ac5@4acc",
-          "label": null,
-          "confirmed": false
+          "label": "HomeLink",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -222,8 +238,9 @@
           "byte": 0,
           "mask": 64,
           "origin": "FUN_code_485c@486c",
-          "label": null,
-          "confirmed": false
+          "label": "TRLR Tow",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 1,
@@ -237,29 +254,33 @@
           "byte": 1,
           "mask": 128,
           "origin": "FUN_code_47e8@47f3",
-          "label": null,
-          "confirmed": false
+          "label": "OneTouch",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 2,
           "mask": 224,
           "origin": "FUN_code_4c62@4c70",
-          "label": null,
-          "confirmed": false
+          "label": "DRLType",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 3,
           "mask": 7,
           "origin": "FUN_code_4c95@4ca0",
-          "label": null,
-          "confirmed": false
+          "label": "DRLLoc",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 3,
           "mask": 8,
           "origin": "FUN_code_4c46@4c50",
-          "label": null,
-          "confirmed": false
+          "label": "DRL Drop",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 4,
@@ -280,22 +301,25 @@
           "byte": 0,
           "mask": 4,
           "origin": "FUN_code_46fa@4707",
-          "label": null,
-          "confirmed": false
+          "label": "Cam En",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 3,
           "mask": 8,
           "origin": "FUN_code_4ade@4b09",
-          "label": null,
-          "confirmed": false
+          "label": "ProxEntry",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 3,
           "mask": 32,
           "origin": "FUN_code_4778@4782",
-          "label": null,
-          "confirmed": false
+          "label": "TravelLnk",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -308,15 +332,17 @@
           "byte": 1,
           "mask": 15,
           "origin": "FUN_code_4ade@4b1b",
-          "label": null,
-          "confirmed": false
+          "label": "ProxEntry",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 2,
           "mask": 15,
           "origin": "FUN_code_4ade@4b24",
-          "label": null,
-          "confirmed": false
+          "label": "ProxEntry",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -336,22 +362,25 @@
           "byte": 0,
           "mask": 4,
           "origin": "FUN_code_4805@4812",
-          "label": null,
-          "confirmed": false
+          "label": "Halo En",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 0,
           "mask": 8,
           "origin": "FUN_code_4f10@4f5b",
-          "label": null,
-          "confirmed": false
+          "label": "LED Heads",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 0,
           "mask": 16,
           "origin": "FUN_code_4f7b@4fc5",
-          "label": null,
-          "confirmed": false
+          "label": "LED FTrn",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -364,22 +393,25 @@
           "byte": 0,
           "mask": 64,
           "origin": "FUN_code_4ba3@4baa",
-          "label": null,
-          "confirmed": false
+          "label": "PanicBtn",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 2,
           "mask": 2,
           "origin": "FUN_code_4b46@4b69",
-          "label": null,
-          "confirmed": false
+          "label": "Bed115v",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 2,
           "mask": 128,
           "origin": "FUN_code_48e3@4908",
-          "label": null,
-          "confirmed": false
+          "label": "AUX",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -392,29 +424,33 @@
           "byte": 0,
           "mask": 12,
           "origin": "FUN_code_4805@4825",
-          "label": null,
-          "confirmed": false
+          "label": "Halo En",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 1,
           "mask": 2,
           "origin": "FUN_code_4e79@4ec5",
-          "label": null,
-          "confirmed": false
+          "label": "Tail",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 1,
           "mask": 192,
           "origin": "FUN_code_4f7b@4fd0",
-          "label": null,
-          "confirmed": false
+          "label": "LED FTrn",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 2,
           "mask": 9,
           "origin": "FUN_code_4e1e@4e5b",
-          "label": null,
-          "confirmed": false
+          "label": "Tail",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -427,22 +463,25 @@
           "byte": 1,
           "mask": 128,
           "origin": "FUN_code_4b46@4b51",
-          "label": null,
-          "confirmed": false
+          "label": "Bed115v",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 4,
           "mask": 2,
           "origin": "FUN_code_4b46@4b72",
-          "label": null,
-          "confirmed": false
+          "label": "Bed115v",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 7,
           "mask": 224,
           "origin": "FUN_code_4899@48b9",
-          "label": null,
-          "confirmed": false
+          "label": "AutoHiBm",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -455,8 +494,9 @@
           "byte": 0,
           "mask": 12,
           "origin": "FUN_code_48e3@4911",
-          "label": null,
-          "confirmed": false
+          "label": "AUX",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -469,8 +509,9 @@
           "byte": 3,
           "mask": 12,
           "origin": "FUN_code_4a0d@4a14",
-          "label": null,
-          "confirmed": false
+          "label": "LOCKER",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -490,36 +531,41 @@
           "byte": 2,
           "mask": 12,
           "origin": "FUN_code_48e3@48ee",
-          "label": null,
-          "confirmed": false
+          "label": "AUX",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 3,
           "mask": 64,
           "origin": "FUN_code_4899@48c5",
-          "label": null,
-          "confirmed": false
+          "label": "AutoHiBm",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 4,
           "mask": 1,
           "origin": "FUN_code_4930@4951",
-          "label": null,
-          "confirmed": false
+          "label": "BlindSpot",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 6,
           "mask": 128,
           "origin": "FUN_code_4ade@4b12",
-          "label": null,
-          "confirmed": false
+          "label": "ProxEntry",
+          "confirmed": true,
+          "label_source": "firmware"
         },
         {
           "byte": 7,
           "mask": 128,
           "origin": "FUN_code_46fa@4728",
-          "label": null,
-          "confirmed": false
+          "label": "Cam En",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -539,8 +585,9 @@
           "byte": 1,
           "mask": 7,
           "origin": "FUN_code_49c7@49d9",
-          "label": null,
-          "confirmed": false
+          "label": "TrlrBrk",
+          "confirmed": true,
+          "label_source": "firmware"
         }
       ]
     },
@@ -558,5 +605,6 @@
         }
       ]
     }
-  }
+  },
+  "_firmware_settings_catalog": "tazer_config/settings_map.json (authoritative per-setting map, 37 settings)"
 }
