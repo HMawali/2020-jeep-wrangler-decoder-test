@@ -107,6 +107,7 @@ class Session:
         self.rx = 0
         self.frames = deque(maxlen=500)
         self.lamps = {}            # '0xD0A0' -> True/False (from observed 0x2F)
+        self.telemetry = {'boost_psi': 0, 'vac_inhg': 0, 'rpm': 0, 'speed_mph': 0}
         self.lock = threading.RLock()
         self.show_thread = None
         self.show_stop = threading.Event()
@@ -163,6 +164,35 @@ class Session:
             raise RuntimeError('ENGINE RUNNING required: the BCM drops the 10 03 session with the '
                                'engine off, so 0x2F outputs / light shows will not hold. Start the '
                                'engine (or flip Vehicle State) and retry.')
+
+    def read_live_telemetry(self):
+        """Live RPM (0x025) + speed (0x08B wheel avg) off the bus, cached. Non-blocking: skips if a
+        show is running or the link is busy, so it never contends with UDS ops."""
+        if self.mode != 'live' or not self.connected or not self.rawlink:
+            return self.telemetry
+        if self.show_thread and self.show_thread.is_alive():
+            return self.telemetry
+        if not self.lock.acquire(blocking=False):
+            return self.telemetry
+        try:
+            frames = self.rawlink.collect(0.06)   # rawlink = no inspector spam from broadcasts
+            rpm = wheel = None
+            for f in frames:
+                if f.id == 0x025 and len(f.data) >= 2:
+                    rpm = (f.data[0] << 8) | f.data[1]
+                elif f.id == 0x08B and len(f.data) >= 8:
+                    vals = [(((f.data[k] << 8) | f.data[k + 1]) & 0x0FFF) * 0.1 for k in (0, 2, 4, 6)]
+                    wheel = sum(vals) / 4.0
+            if rpm is not None:
+                self.telemetry['rpm'] = rpm
+                self.engine_running = rpm > 300    # auto-correct the interlock from real data
+            if wheel is not None:
+                self.telemetry['speed_mph'] = round(wheel * 0.621371, 1)
+        except Exception:
+            pass
+        finally:
+            self.lock.release()
+        return self.telemetry
 
     # ---- session/tester helpers ----
     def ensure_session(self, tx, rx=None):
@@ -608,7 +638,7 @@ class Handler(BaseHTTPRequestHandler):
                 'tx': SESSION.tx, 'rx': SESSION.rx, 'show': SESSION.show_name}
 
     def stream(self):
-        tele = SESSION.sim.telemetry() if (SESSION.sim) else {'boost_psi': 0, 'vac_inhg': 0, 'rpm': 0, 'speed_mph': 0}
+        tele = SESSION.sim.telemetry() if (SESSION.sim) else SESSION.read_live_telemetry()
         return {'frames': list(SESSION.frames)[-120:], 'lamps': SESSION.lamps,
                 'telemetry': tele, 'tx': SESSION.tx, 'rx': SESSION.rx,
                 'show': SESSION.show_name, 'connected': SESSION.connected,
