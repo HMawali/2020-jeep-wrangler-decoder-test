@@ -414,3 +414,24 @@ portions of the show runner branch on the show-index (R17) and the decompiler ma
 args, so beyond the opening I used the clean extracted steps rather than tracing every R17 branch.
 `mega` remains the hand-built full-exterior alternative. Remaining nice-to-haves: confirm D0A3 (right
 brake) and whether any 0x74B element (D039/D03A) adds a rear lamp the BCM set misses.
+
+## 2026-11-25 — CRITICAL: plain 2E config writes do NOT apply/persist (blocks the 37-setting feature)
+Tested DRLLoc Dedic(5)->Turn(3) end-to-end via the UI on the live truck:
+- The 2E WriteDataByIdentifier DID change the UDS read-back (read Turn 3x consistently), writes
+  returned POSITIVE / responsePending(0x78).
+- BUT: (a) NO physical change (DRL did not become the turn signal), and (b) after an ENGINE cycle
+  the field drifted to 0x07 (invalid) - i.e. the BCM re-derived/overwrote our write.
+- Restored to factory Dedic(5) (confirmed), so the truck is back to stock.
+CONCLUSION: a bare `2E 01 XX <block>` to the proxi-config DIDs is NOT the full mechanism on this
+truck. The Tazer almost certainly does MORE after the write. >>> MAC TODO (firmware): find how the
+Tazer COMMITS proxi config - candidates to look for in the ZES-128 settings-write path (config
+wrapper 0x8c00 / the 0x2E sender):
+  1. A routineControl (0x31) "commit/save configuration" after the 2E (FCA proxi often needs a
+     write-then-commit, or an ECUReset 0x11 / specific NRC-0x78 completion handshake).
+  2. A PROGRAMMING session (0x10 0x02) rather than extended (0x10 0x03) for the write to stick.
+  3. A full power-DOWN/sleep (not engine cycle) required to load the new NVM config to the outputs.
+  4. Whether the real config lives in a different DID/region and 0x01xx is a volatile mirror.
+Until this is known, the UI's `cfg set` / Vehicle Settings writes read back changed but will NOT
+take effect - treat the 37-setting write feature as UNPROVEN. (Light show / 0x2F actuation is
+unaffected and fully works.) Also fixed: UI revert snapshot now only saves the FIRST (factory)
+block so a revert can't capture an already-changed value.

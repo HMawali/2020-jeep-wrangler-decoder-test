@@ -312,8 +312,11 @@ def cfg_set(name, value, dry_run=True):
                            'frame': '2E 01 %02X %s' % (did & 0xFF, bytes(nb).hex(' ').upper())})
         os.makedirs(REVERT_DIR, exist_ok=True)
         revfile = os.path.join(REVERT_DIR, 'revert_%s.json' % name.replace(' ', '_'))
-        json.dump({'setting': name, 'blocks': revert, 'time': time.strftime('%Y-%m-%d %H:%M:%S')},
-                  open(revfile, 'w'), indent=2)
+        # Only snapshot the FIRST time (preserve the true factory block; don't let repeated
+        # writes overwrite the revert with an already-changed value).
+        if not os.path.exists(revfile):
+            json.dump({'setting': name, 'blocks': revert, 'time': time.strftime('%Y-%m-%d %H:%M:%S')},
+                      open(revfile, 'w'), indent=2)
         result = {'name': name, 'value': value, 'dry_run': dry_run, 'frames': frames,
                   'revert_file': os.path.relpath(revfile, TC_DIR),
                   'polarity_verified': d.get('value_polarity_verified', False)}
