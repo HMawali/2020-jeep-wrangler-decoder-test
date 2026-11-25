@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tazer JL Cockpit</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="app">
+  <!-- ======================= TOP COMMAND BAR ======================= -->
+  <header id="topbar">
+    <div class="brand">
+      <span class="logo">◈</span>
+      <div>
+        <div class="brand-name">TAZER&nbsp;JL <span class="brand-sub">COCKPIT</span></div>
+        <div class="brand-tag">dongle-free &nbsp;·&nbsp; CAN config &amp; actuation</div>
+      </div>
+    </div>
+
+    <div class="bar-group" id="conn-group">
+      <div class="seg" id="mode-seg">
+        <button data-mode="sim" class="seg-btn active">◼ SIMULATOR</button>
+        <button data-mode="live" class="seg-btn">▲ LIVE TRUCK</button>
+      </div>
+      <select id="port-sel" title="Adapter COM port"><option>—</option></select>
+      <button id="ports-refresh" class="icon-btn" title="Re-scan ports">⟳</button>
+      <div class="seg" id="bus-seg">
+        <button data-bus="s6" class="seg-btn active">s6 · 500k C</button>
+        <button data-bus="s4" class="seg-btn">s4 · 125k IHS</button>
+      </div>
+      <button id="connect-btn" class="primary-btn">CONNECT</button>
+    </div>
+
+    <div class="bar-group" id="telemetry-group">
+      <div class="activity">
+        <span class="pill tx" id="tx-pill">TX <b id="tx-n">0</b></span>
+        <span class="pill rx" id="rx-pill">RX <b id="rx-n">0</b></span>
+      </div>
+      <select id="profile-sel" title="Vehicle profile">
+        <option>2020 JL</option><option>JT Gladiator</option><option>4XE</option><option>392</option>
+      </select>
+      <button id="engine-btn" class="state-btn off" title="Toggle vehicle state">
+        <span class="dot"></span><span id="engine-lbl">IGN RUN · ENGINE OFF</span>
+      </button>
+    </div>
+  </header>
+
+  <div id="interlock" class="interlock hidden"></div>
+
+  <!-- ======================= BODY: NAV + WORKSPACE ======================= -->
+  <div id="main">
+    <nav id="sidenav">
+      <button class="nav-btn active" data-ws="settings"><span>⚙</span>Vehicle Settings</button>
+      <button class="nav-btn" data-ws="live"><span>⚡</span>Live Functions</button>
+      <button class="nav-btn" data-ws="lightshow"><span>✸</span>Light Show Studio</button>
+      <button class="nav-btn" data-ws="remap"><span>⟳</span>Remap &amp; Memory</button>
+      <button class="nav-btn" data-ws="diag"><span>⌬</span>Diagnostics</button>
+
+      <div class="nav-sep"></div>
+      <!-- Steering wheel + EVIC preview -->
+      <div class="wheel-widget">
+        <div class="evic" id="evic">
+          <div class="evic-head" id="evic-head">EVIC</div>
+          <div class="evic-body" id="evic-body">— ready —</div>
+        </div>
+        <div class="wheel">
+          <button class="whl-btn" data-whl="left" title="◀ menu">◀</button>
+          <button class="whl-btn wide" data-whl="canc" title="Cruise Cancel">CANC</button>
+          <button class="whl-btn wide" data-whl="onoff" title="Cruise On/Off">ON/OFF</button>
+          <button class="whl-btn" data-whl="plus" title="Cruise +">+</button>
+          <button class="whl-btn" data-whl="minus" title="Cruise −">−</button>
+        </div>
+        <div class="wheel-cap">steering cluster preview</div>
+      </div>
+    </nav>
+
+    <main id="workspace"><!-- rendered by app.js --></main>
+  </div>
+
+  <!-- ======================= BOTTOM LIVE CONSOLE ======================= -->
+  <section id="console" class="collapsed">
+    <div id="console-head">
+      <button id="console-toggle">▲ LIVE UDS / CAN INSPECTOR</button>
+      <div class="console-tools">
+        <label class="chk"><input type="checkbox" id="autoscroll" checked> autoscroll</label>
+        <button id="console-clear" class="mini-btn">clear</button>
+      </div>
+    </div>
+    <div id="console-body"></div>
+  </section>
+</div>
+
+<div id="toast-wrap"></div>
+<div id="modal-wrap" class="hidden"><div id="modal"></div></div>
+
+<script src="/app.js"></script>
+</body>
+</html>

@@ -40,3 +40,25 @@ Then open http://localhost:8765. See the reference doc for the slcan command det
 
 This is a **private** repository. The files in `logs/` contain raw bus data from a specific vehicle
 (including its VIN in the `0x3E0` broadcast) — keep it private or scrub those identifiers before sharing.
+
+## Desktop Cockpit UI (no-build, Windows/macOS/Linux)
+A tactile dark "cockpit" GUI over the Python backend — one command, **zero dependencies** (pure
+stdlib HTTP bridge + a no-build HTML/JS frontend; no pip, no npm):
+```
+python run_ui.py            REM  or double-click run_ui.bat on Windows
+```
+It opens `http://127.0.0.1:8787/`. Pick **SIMULATOR** in the top bar to drive the whole UI offline
+(the simulator speaks real ISO-TP so every read/write/0x2F/light-show path is exercised with no
+truck), or **LIVE TRUCK** + COM port + `s6` when the WeAct USB2CANFD + SGW bypass are connected.
+
+The bridge (`tazer_config/ui/server.py`) reuses the real `canlink`/`uds`/`did_catalog` modules and
+the firmware catalogs — single source of truth, same gating as the CLI (dry-run default, read-first,
+revert snapshots, engine-running interlock for 0x2F / light shows, confirmed-only actuations).
+
+Workspaces: **Vehicle Settings** (37 cards + pending-changes cart + dry-run diff + polarity-verify
+helper + tire calculator), **Live Functions** (confirmed actuation switches + boost/vac/RPM gauges +
+bench-capture queue for unresolved features), **Light Show Studio** (20-lamp Jeep visualizer, show
+runner with tick slider, single-lamp `iocontrol` tester), **Remap & Memory** (cruise-button remapper +
+persistent automations, saved locally for the ESP32 port), **Diagnostics** (fullread snapshot + diff,
+multi-module DTC 0x19/0x14, listen-only broadcast-bitmap watch). Bottom drawer = live UDS/CAN frame
+inspector; top bar = adapter/bus/mode/vehicle-state.

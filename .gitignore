@@ -10,3 +10,7 @@ before.json
 snap_*.json
 after*.json
 watch_*.json
+
+# UI runtime artifacts
+tazer_config/reverts/
+revert_*.json
