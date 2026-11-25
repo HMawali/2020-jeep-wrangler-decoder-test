@@ -435,3 +435,33 @@ Until this is known, the UI's `cfg set` / Vehicle Settings writes read back chan
 take effect - treat the 37-setting write feature as UNPROVEN. (Light show / 0x2F actuation is
 unaffected and fully works.) Also fixed: UI revert snapshot now only saves the FIRST (factory)
 block so a revert can't capture an already-changed value.
+
+## 2026-11-25 (Mac) — ANSWERED: there is NO hidden config-commit mechanism (it's a vehicle latch)
+Dug the firmware for the commit step the 2026-11-25 CRITICAL note asked for (candidates: 0x31 routine
+/ 0x10 02 programming session / 0x11 reset / different DID region). Traced the WHOLE BCM-config path
+in ZES-128.bin end to end:
+- READ builder (code:4063) opens the session via code:3cbd with ID 0x0620 and R22=1 -> subfunction 3
+  => **DiagnosticSessionControl `10 03` EXTENDED** (NOT programming `10 02`).
+- WRITE handler (code:3b89): RMW target bits into scratch, build a **bare `2E 01 XX <block>`** (8-byte
+  blocks go multiframe `10 0B 2E..` + `21..`), send. RESPONSE handler (code:0f56): on positive `6E`
+  it just clears state and returns success. **Nothing after the 6E.**
+- ECUReset `11 01` exists (code:4213) but its callers reset **0x747/0x743/0x740/0x7E0 only — never the
+  BCM 0x620**. No 0x31 to 0x620. No 0x27 anywhere.
+**CONCLUSION: the Tazer commits proxi config with EXACTLY our sequence — `10 03` extended + `22` read
++ RMW + bare `2E`. There is no secret commit frame to add.** So the write path in our tool is correct;
+the "didn't persist" symptom is a vehicle-side latch condition, not a protocol gap.
+
+### >>> TRUCK RE-TEST (the fix is a procedure, not a new frame) <<<
+1. **Latch needs a real SLEEP, not an engine cycle.** FCA BCM proxi sits in a RAM working copy that
+   flushes to EEPROM only on a clean power-down. After a `cfg set ... --yes`: ignition OFF, **key out,
+   doors locked, DON'T reopen, wait ~3 min** for the bus to sleep, THEN re-read. (DRLLoc held across
+   in-session reads and only reverted after the cycle — textbook un-latched RAM copy.)
+2. **Pick a better test setting than DRLLoc.** "DRL location" is probably a DERIVED field (the BCM
+   recomputes it at startup; the 0x07 you saw = invalid/recompute sentinel), so it's the worst case.
+   Re-test persistence with a known STORED-INPUT bit: **LED Fogs (0x0131 b4 m0x20)** or a Customer-
+   Settings-Menu bit in **0146/0147**. Write -> proper sleep (#1) -> re-read -> observe behavior.
+3. Only if a stored-input setting STILL won't persist after a proper sleep is there more to learn —
+   and since the firmware has no other service, that must come from a **bench CAN capture of the real
+   Tazer writing a setting** (diff its frames/session/timing vs ours), not from more static RE.
+=> Net: keep `value_polarity_verified`/`write_takes_effect` discipline, but the feature is likely
+   SOUND pending a proper-sleep re-test on a non-derived setting. Don't hunt for a commit frame.

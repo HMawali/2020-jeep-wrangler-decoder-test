@@ -435,7 +435,7 @@
       ],
       "label_source": "firmware",
       "value_polarity_verified": true,
-      "notes": "Enum byte encoding confirmed (3=Turn read back). BUT a plain 2E write did NOT change physical DRL behavior and the BCM overwrote the field to 0x07 on an ignition cycle -> 2E alone is NOT sufficient to apply/persist proxi config on this truck. Restored to factory Dedic(5). See HANDOFF: needs the commit mechanism.",
+      "notes": "Enum byte encoding confirmed (3=Turn read back). A plain 2E write did NOT change physical DRL behavior and the BCM overwrote the field to 0x07 on an ignition cycle. FIRMWARE DIG (2026-11-25): the Tazer uses the SAME sequence we do (10 03 extended + 22 read + RMW + bare 2E; NO 0x31/0x11/0x10-02 commit, verified end-to-end). So this is NOT a protocol gap. DRLLoc is almost certainly a DERIVED field (0x07=recompute sentinel) = a bad test case. Re-test persistence on a STORED-INPUT setting (e.g. LED Fogs 0x0131 b4 0x20) with a PROPER SLEEP (ign off, key out, locked, ~3 min) before trusting writes. Restored to factory Dedic(5). See HANDOFF 2026-11-25.",
       "write_takes_effect": false
     },
     "DRLType": {
