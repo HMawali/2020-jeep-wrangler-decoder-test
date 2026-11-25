@@ -534,7 +534,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == '/api/state':
                 return self._send(200, jbytes(self.state()))
             if path == '/api/ports':
-                ports = list_ports() if SESSION.mode != 'sim' else []
+                ports = list_ports()  # always list real ports so LIVE TRUCK can be selected from any mode
                 return self._send(200, jbytes({'ports': ports}))
             if path == '/api/catalog':
                 return self._send(200, jbytes(CATALOG['settings']))
